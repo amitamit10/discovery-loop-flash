@@ -1,9 +1,9 @@
 """Island-model basin-hopping solver for csqv: hex-lattice template inits (incl. under-full lattice + strip fill),
 affine-lattice template bank (rotated / sheared / anisotropic hex lattices sized by bisection to hold exactly n sites),
-sparse-neighbour penalty L-BFGS-B, adaptive move selection incl. half-plane crossover with elite pool, LP-optimal
-radii for fixed centres, fast exact KKT-Newton active-set polish on the contact graph for every candidate,
-SLSQP polish on new bests, final strict shrink. Independent chains run in worker processes (one per available core)
-and exchange elites through atomic JSON files.
+sparse-neighbour penalty L-BFGS-B, adaptive move selection incl. lattice-slip row/band moves and half-plane crossover
+with a dihedral-symmetry-augmented elite pool, LP-optimal radii for fixed centres, fast exact KKT-Newton active-set
+polish on the contact graph for every candidate, SLSQP polish on new bests, minimal-loss final strict shrink.
+Independent chains run in worker processes (one per available core) and exchange elites through atomic JSON files.
 Interface: python solver.py --n N --time SECONDS --seed S --out PATH
 """
 
@@ -135,11 +135,41 @@ def lp_radii(c, r0=None):
     return np.zeros(n)
 
 
+def strict_ok(c, r):
+    """Strict float64 feasibility, checked both in squared and in plain-distance form (conservative)."""
+    try:
+        if not np.isfinite(r).all() or not (r > 0).all():
+            return False
+        wall = np.minimum(np.minimum(c[:, 0] - r, 1 - c[:, 0] - r), np.minimum(c[:, 1] - r, 1 - c[:, 1] - r))
+        if wall.min() < 0:
+            return False
+        d2 = ((c[:, None, :] - c[None, :, :]) ** 2).sum(-1)
+        s = r[:, None] + r[None, :]
+        s2 = s * s
+        np.fill_diagonal(s2, -1.0)
+        np.fill_diagonal(s, -1.0)
+        if (d2 - s2).min() < 0:
+            return False
+        if (np.sqrt(d2) - s).min() < 0:
+            return False
+        return True
+    except Exception:
+        return False
+
+
 def make_strict(c, r):
     r = np.asarray(r, float).copy()
     wall = np.minimum(np.minimum(c[:, 0], 1 - c[:, 0]), np.minimum(c[:, 1], 1 - c[:, 1]))
     d = np.sqrt(((c[:, None, :] - c[None, :, :]) ** 2).sum(-1))
     np.fill_diagonal(d, np.inf)
+    pv = (r[:, None] + r[None, :] - d).max()
+    wv = (r - wall).max()
+    base = max(pv / 2, wv, 0.0)
+    # minimal-loss uniform shrink: smallest safety margin that is strictly feasible in float64
+    for eps in (1e-14, 1e-13, 1e-12, 1e-11, 1e-10, 1e-9):
+        r2 = np.maximum(r - (base + eps), 1e-9)
+        if strict_ok(c, r2):
+            return r2
     for _ in range(4):
         pv = (r[:, None] + r[None, :] - d).max()
         wv = (r - wall).max()
@@ -726,6 +756,37 @@ def _clip(c):
     return np.clip(c, 1e-3, 1 - 1e-3)
 
 
+def sym_apply(c, k):
+    """One of the 8 symmetries of the unit square (k = 1..7; 0 is the identity)."""
+    x = c[:, 0].copy()
+    y = c[:, 1].copy()
+    if k & 1:
+        x = 1.0 - x
+    if k & 2:
+        y = 1.0 - y
+    if k & 4:
+        x, y = y, x
+    return np.stack([x, y], 1)
+
+
+def lattice_dir(c, r, rng):
+    """Dominant hex-lattice row orientation of a packing (circular mean of 6x contact angles), in (-pi/6, pi/6]."""
+    try:
+        rbar = max(float(r.mean()), 1e-6)
+        I, J = build_pairs(c, r, 0.35 * rbar)
+        if len(I) < 3:
+            return rng.uniform(0, math.pi / 3)
+        dx = c[J, 0] - c[I, 0]
+        dy = c[J, 1] - c[I, 1]
+        ang = np.arctan2(dy, dx)
+        zc = np.exp(6j * ang).sum()
+        if abs(zc) < 1e-9:
+            return rng.uniform(0, math.pi / 3)
+        return float(np.angle(zc)) / 6.0
+    except Exception:
+        return rng.uniform(0, math.pi / 3)
+
+
 def op_jitter(scale):
     def f(c, r, rng, n, ctx):
         rbar = max(float(r.mean()), 1e-6)
@@ -794,21 +855,67 @@ def op_local(c, r, rng, n, ctx):
     return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
 
 
+def op_slip(mode):
+    """Lattice slip: shift one hex row (mode 1) or a band of rows / a half-plane (mode 2) along the row direction by
+    about half a lattice period. Circles pushed past a wall are clipped to the wall or re-inserted into holes."""
+
+    def f(c, r, rng, n, ctx):
+        rbar = max(float(r.mean()), 1e-6)
+        if rng.random() < 0.25:
+            th = 0.0 if rng.random() < 0.5 else math.pi / 2
+        else:
+            th = lattice_dir(c, r, rng) + int(rng.integers(0, 3)) * math.pi / 3
+        u = np.array([math.cos(th), math.sin(th)])
+        nv = np.array([-u[1], u[0]])
+        t = c @ nv
+        i = int(rng.integers(0, n))
+        h = math.sqrt(3.0) * rbar
+        k = 1 if mode == 1 else int(rng.integers(2, 4))
+        if mode == 2 and rng.random() < 0.3:
+            band = t > t[i] - 0.5 * h
+        else:
+            band = (t > t[i] - 0.5 * h) & (t < t[i] + (k - 0.5) * h)
+        if not band.any():
+            band[i] = True
+        mag = 1.0 if rng.random() < 0.6 else rng.uniform(0.5, 1.5)
+        sgn = 1.0 if rng.random() < 0.5 else -1.0
+        c2 = c.copy()
+        r2 = r.copy()
+        c2[band] += sgn * mag * rbar * u
+        rr = np.minimum(r2, 0.5)
+        out = (c2[:, 0] < rr) | (c2[:, 0] > 1 - rr) | (c2[:, 1] < rr) | (c2[:, 1] > 1 - rr)
+        if out.any():
+            if rng.random() < 0.5:
+                c2 = np.minimum(np.maximum(c2, rr[:, None]), 1 - rr[:, None])
+            else:
+                idx = np.nonzero(out)[0]
+                keep = ~out
+                cs, rs = fill_holes(c2[keep], r2[keep], len(idx), rng)
+                c2[idx] = cs
+                r2[idx] = rs
+        return _clip(c2), r2, (10, 1e2, 1e3, 1e4, 1e5)
+
+    return f
+
+
 def op_cross(c, r, rng, n, ctx):
     pool = ctx["pool"]
     partners = [p for p in pool if abs(p["s"] - ctx["cur_s"]) > 1e-9 and len(p["c"]) == n]
     if not partners:
         return op_subset(c, r, rng, n, ctx)
     p = partners[int(rng.integers(0, len(partners)))]
+    pc = p["c"]
+    if rng.random() < 0.5:
+        pc = sym_apply(pc, int(rng.integers(1, 8)))
     th = rng.uniform(0, math.pi)
     nv = np.array([math.cos(th), math.sin(th)])
     q = rng.uniform(0.25, 0.75, 2)
     sa = (c - q) @ nv
-    sb = (p["c"] - q) @ nv
+    sb = (pc - q) @ nv
     A = sa <= 0
     B = sb > 0
     cA, rA = c[A], r[A]
-    cB, rB = p["c"][B], p["r"][B]
+    cB, rB = pc[B], p["r"][B]
     if len(cA) and len(cB):
         d = np.sqrt(((cB[:, None, :] - cA[None, :, :]) ** 2).sum(-1)) - rA[None, :] - rB[:, None]
         ok = d.min(1) > -0.5 * rB
@@ -838,6 +945,8 @@ OPS = [
     op_reinsert,
     op_local,
     op_cross,
+    op_slip(1),
+    op_slip(2),
 ]
 
 
