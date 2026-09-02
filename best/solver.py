@@ -1,6 +1,5 @@
-"""Basin-hopping solver for csqv: penalty L-BFGS-B multi-start, then perturb-and-repolish of the incumbent
-(jitter / relocate smallest circles into largest holes / swap), LP-optimal radii for fixed centres,
-an exact SLSQP active-set polish on the contact graph, and a final strict shrink.
+"""Basin-hopping solver for csqv: sparse-neighbour penalty L-BFGS-B, adaptive move selection, elite pool,
+LP-optimal radii for fixed centres, SLSQP active-set polish on the contact graph, final strict shrink.
 Interface: python solver.py --n N --time SECONDS --seed S --out PATH
 """
 
@@ -18,44 +17,69 @@ class Timeout(Exception):
 
 
 # ----------------------------------------------------------------------------- penalty phase
-def penalty(z, n, mu):
+def penalty(z, n, mu, I, J):
     c = z[: 2 * n].reshape(n, 2)
     r = z[2 * n :]
-    diff = c[:, None, :] - c[None, :, :]
-    d = np.sqrt((diff**2).sum(-1) + 1e-18)
-    v = np.maximum(0.0, r[:, None] + r[None, :] - d)
-    np.fill_diagonal(v, 0.0)
-    wv = np.maximum(
-        0.0,
-        np.stack([r - c[:, 0], r - (1 - c[:, 0]), r - c[:, 1], r - (1 - c[:, 1])], 1),
-    )
-    f = -r.sum() + mu * (0.5 * (v**2).sum() + (wv**2).sum())
-    gr = -1.0 + mu * (2 * v.sum(1) + 2 * wv.sum(1))
-    gc = mu * (-2 * ((v / d)[:, :, None] * diff).sum(1))
-    gc[:, 0] += mu * (-2 * wv[:, 0] + 2 * wv[:, 1])
-    gc[:, 1] += mu * (-2 * wv[:, 2] + 2 * wv[:, 3])
-    return f, np.concatenate([gc.ravel(), gr])
+    dx = c[I, 0] - c[J, 0]
+    dy = c[I, 1] - c[J, 1]
+    d = np.sqrt(dx * dx + dy * dy + 1e-18)
+    v = np.maximum(0.0, r[I] + r[J] - d)
+    wv = np.maximum(0.0, np.stack([r - c[:, 0], r - (1 - c[:, 0]), r - c[:, 1], r - (1 - c[:, 1])], 1))
+    f = -r.sum() + mu * ((v * v).sum() + (wv * wv).sum())
+    vs = np.bincount(I, v, n) + np.bincount(J, v, n)
+    gr = -1.0 + 2.0 * mu * (vs + wv.sum(1))
+    k = 2.0 * mu * v / d
+    kx = k * dx
+    ky = k * dy
+    gx = np.bincount(J, kx, n) - np.bincount(I, kx, n)
+    gy = np.bincount(J, ky, n) - np.bincount(I, ky, n)
+    gx += mu * (-2 * wv[:, 0] + 2 * wv[:, 1])
+    gy += mu * (-2 * wv[:, 2] + 2 * wv[:, 3])
+    g = np.empty(3 * n)
+    g[0 : 2 * n : 2] = gx
+    g[1 : 2 * n : 2] = gy
+    g[2 * n :] = gr
+    return f, g
+
+
+def build_pairs(c, r, cut):
+    d = np.sqrt(((c[:, None, :] - c[None, :, :]) ** 2).sum(-1))
+    M = np.triu(d < (r[:, None] + r[None, :]) + cut, 1)
+    I, J = np.nonzero(M)
+    return I, J
 
 
 def run_penalty(c, r, n, mus, maxiter, deadline):
     z = np.concatenate([c.ravel(), r])
     bounds = [(0.0, 1.0)] * (2 * n) + [(0.0, 0.5)] * n
+    dense = n <= 40
+    I0, J0 = np.triu_indices(n, 1)
+    chunk = maxiter if dense else 50
     for mu in mus:
-        try:
-            res = minimize(
-                penalty,
-                z,
-                args=(n, mu),
-                jac=True,
-                method="L-BFGS-B",
-                bounds=bounds,
-                options={"maxiter": maxiter},
-            )
-            z = res.x
-        except Exception:
-            break
-        if time.time() > deadline:
-            break
+        it = 0
+        while it < maxiter:
+            if time.time() > deadline:
+                return z[: 2 * n].reshape(n, 2).copy(), z[2 * n :].copy()
+            if dense:
+                I, J = I0, J0
+            else:
+                C = z[: 2 * n].reshape(n, 2)
+                R = z[2 * n :]
+                rbar = max(float(R.mean()), 1e-6)
+                I, J = build_pairs(C, R, 2.5 * rbar + 0.02)
+                if len(I) == 0:
+                    I, J = I0[:1], J0[:1]
+            m = min(chunk, maxiter - it)
+            try:
+                res = minimize(
+                    penalty, z, args=(n, mu, I, J), jac=True, method="L-BFGS-B", bounds=bounds, options={"maxiter": m}
+                )
+                z = res.x
+                it += m
+                if res.nit < m:
+                    break
+            except Exception:
+                return z[: 2 * n].reshape(n, 2).copy(), z[2 * n :].copy()
     return z[: 2 * n].reshape(n, 2).copy(), z[2 * n :].copy()
 
 
@@ -88,14 +112,7 @@ def lp_radii(c, r0=None):
         res = None
         for o in (opts, None):
             try:
-                res = linprog(
-                    -np.ones(n),
-                    A_ub=A,
-                    b_ub=b,
-                    bounds=bounds,
-                    method="highs",
-                    options=o,
-                )
+                res = linprog(-np.ones(n), A_ub=A, b_ub=b, bounds=bounds, method="highs", options=o)
                 if res.success:
                     break
             except Exception:
@@ -149,7 +166,7 @@ def trivial(n):
 
 
 # ----------------------------------------------------------------------------- SLSQP active-set polish
-def polish(c, r, n, deadline):
+def polish(c, r, n, deadline, rounds=4, maxiter=120):
     best = evaluate(c, r)
     if n < 2:
         return best
@@ -166,7 +183,7 @@ def polish(c, r, n, deadline):
     obj = lambda z: -z[2 * n :].sum()
     ojac = lambda z: gobj
 
-    for _ in range(4):
+    for _ in range(rounds):
         if time.time() > deadline:
             break
         C = z[: 2 * n].reshape(n, 2)
@@ -230,7 +247,7 @@ def polish(c, r, n, deadline):
                 bounds=bounds,
                 constraints=[{"type": "ineq", "fun": cons, "jac": cjac}],
                 callback=cb,
-                options={"maxiter": 120, "ftol": 1e-14},
+                options={"maxiter": maxiter, "ftol": 1e-14},
             )
             znew = res.x
         except Timeout:
@@ -284,10 +301,7 @@ def relocate(c, r, rng, k):
     P = rng.random((3000, 2))
     wall = np.minimum(np.minimum(P[:, 0], 1 - P[:, 0]), np.minimum(P[:, 1], 1 - P[:, 1]))
     if len(ck):
-        h = np.minimum(
-            (np.sqrt(((P[:, None, :] - ck[None, :, :]) ** 2).sum(-1)) - rk[None, :]).min(1),
-            wall,
-        )
+        h = np.minimum((np.sqrt(((P[:, None, :] - ck[None, :, :]) ** 2).sum(-1)) - rk[None, :]).min(1), wall)
     else:
         h = wall
     c2, r2 = c.copy(), r.copy()
@@ -300,32 +314,91 @@ def relocate(c, r, rng, k):
     return c2, r2
 
 
-def perturb(c, r, rng, n):
+def _clip(c):
+    return np.clip(c, 1e-3, 1 - 1e-3)
+
+
+def op_jitter(scale):
+    def f(c, r, rng, n):
+        rbar = max(float(r.mean()), 1e-6)
+        c2 = c + rng.normal(0, rbar * scale, c.shape)
+        return _clip(c2), r.copy(), (1e3, 1e4, 1e5)
+
+    return f
+
+
+def op_subset(c, r, rng, n):
     rbar = max(float(r.mean()), 1e-6)
-    u = rng.random()
-    c2, r2 = c.copy(), r.copy()
-    if u < 0.35:
-        sig = rbar * rng.choice([0.05, 0.15, 0.4])
-        c2 += rng.normal(0, sig, c2.shape)
-        mus = (1e3, 1e4, 1e5)
-    elif u < 0.55:
-        k = max(1, int(n * rng.uniform(0.1, 0.3)))
-        idx = rng.choice(n, k, replace=False)
-        c2[idx] += rng.normal(0, rbar * 0.8, (k, 2))
-        mus = (1e2, 1e3, 1e4, 1e5)
-    elif u < 0.85:
-        k = int(rng.integers(1, min(4, n) + 1))
+    k = max(1, int(n * rng.uniform(0.1, 0.3)))
+    idx = rng.choice(n, k, replace=False)
+    c2 = c.copy()
+    c2[idx] += rng.normal(0, rbar * 0.8, (k, 2))
+    return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
+
+
+def op_relocate(kmax):
+    def f(c, r, rng, n):
+        k = int(rng.integers(1, min(kmax, n) + 1))
         c2, r2 = relocate(c, r, rng, k)
-        mus = (1e2, 1e3, 1e4, 1e5)
-    else:
-        order = np.argsort(r)
-        q = max(1, n // 3)
-        i = order[rng.integers(0, q)]
-        j = order[n - 1 - rng.integers(0, q)]
-        c2[[i, j]] = c2[[j, i]]
-        mus = (1e2, 1e3, 1e4, 1e5)
-    c2 = np.clip(c2, 1e-3, 1 - 1e-3)
-    return c2, r2, mus
+        return _clip(c2), r2, (1e2, 1e3, 1e4, 1e5)
+
+    return f
+
+
+def op_swap(c, r, rng, n):
+    order = np.argsort(r)
+    q = max(1, n // 3)
+    i = order[rng.integers(0, q)]
+    j = order[n - 1 - rng.integers(0, q)]
+    c2 = c.copy()
+    c2[[i, j]] = c2[[j, i]]
+    return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
+
+
+def op_bignudge(c, r, rng, n):
+    rbar = max(float(r.mean()), 1e-6)
+    order = np.argsort(r)
+    q = max(1, n // 3)
+    i = order[n - 1 - rng.integers(0, q)]
+    th = rng.uniform(0, 2 * math.pi)
+    c2 = c.copy()
+    c2[i] += rbar * rng.uniform(0.6, 1.5) * np.array([math.cos(th), math.sin(th)])
+    return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
+
+
+def op_reinsert(c, r, rng, n):
+    rbar = max(float(r.mean()), 1e-6)
+    k = int(rng.integers(1, min(3, n) + 1))
+    idx = rng.choice(n, k, replace=False)
+    c2, r2 = c.copy(), r.copy()
+    c2[idx] = rng.random((k, 2))
+    r2[idx] = 0.3 * rbar
+    return _clip(c2), r2, (1e2, 1e3, 1e4, 1e5)
+
+
+def op_local(c, r, rng, n):
+    # jitter a spatial neighbourhood around a random circle
+    rbar = max(float(r.mean()), 1e-6)
+    i = rng.integers(0, n)
+    d = np.sqrt(((c - c[i]) ** 2).sum(1))
+    idx = np.nonzero(d < 3.0 * rbar)[0]
+    c2 = c.copy()
+    c2[idx] += rng.normal(0, rbar * 0.5, (len(idx), 2))
+    return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
+
+
+OPS = [
+    op_jitter(0.05),
+    op_jitter(0.15),
+    op_jitter(0.4),
+    op_subset,
+    op_relocate(2),
+    op_relocate(4),
+    op_swap,
+    op_bignudge,
+    op_reinsert,
+    op_local,
+]
 
 
 # ----------------------------------------------------------------------------- driver
@@ -346,14 +419,26 @@ def solve(n, budget, seed, out):
     t0 = time.time()
     reserve = min(5.0, max(0.5, 0.05 * budget))
     end = t0 + budget - reserve
-    p1_end = t0 + 0.3 * budget
-    p2_end = t0 + 0.8 * budget - reserve
+    p1_end = t0 + 0.25 * budget
+    p2_end = t0 + 0.82 * budget - reserve
     best = trivial(n)
     save(out, n, best)
     if n == 1:
         best = evaluate(np.array([[0.5, 0.5]]), np.array([0.5]))
         save(out, n, best)
         return best
+
+    pool = []
+
+    def add_pool(sol):
+        if sol["s"] <= 0:
+            return
+        for p in pool:
+            if abs(p["s"] - sol["s"]) < 1e-6:
+                return
+        pool.append(sol)
+        pool.sort(key=lambda p: -p["s"])
+        del pool[6:]
 
     # Phase 1: cold multi-start
     starts = 0
@@ -364,29 +449,58 @@ def solve(n, budget, seed, out):
         c, r = run_penalty(c, r, n, (10, 100, 1e3, 1e4, 1e5), 300, end)
         cand = evaluate(c, lp_radii(c, r))
         starts += 1
+        add_pool(cand)
         if cand["s"] > best["s"]:
             best = cand
             save(out, n, best)
 
     if time.time() < end and best["s"] > 0:
-        cand = polish(best["c"], best["r"], n, min(end, time.time() + 0.15 * budget))
+        cand = polish(best["c"], best["r"], n, min(end, time.time() + 0.12 * budget))
         if cand["s"] > best["s"]:
             best = cand
             save(out, n, best)
+    add_pool(best)
 
-    # Phase 2: basin hopping on the incumbent
+    # Phase 2: basin hopping on the incumbent with adaptive operator selection
     cur = best
     stall = 0
     last_polish = time.time()
+    W = np.ones(len(OPS))
+    qp_time = 0.0
+    p2_start = time.time()
+    qmaxiter = 60 if n <= 60 else 40
     while time.time() < p2_end and cur["s"] > 0:
-        c, r, mus = perturb(cur["c"], cur["r"], rng, n)
+        p = (0.1 + W) / (0.1 + W).sum()
+        k = int(rng.choice(len(OPS), p=p))
+        try:
+            c, r, mus = OPS[k](cur["c"], cur["r"], rng, n)
+        except Exception:
+            continue
         c, r = run_penalty(c, r, n, mus, 200, end)
         cand = evaluate(c, lp_radii(c, r))
+        now = time.time()
+        if (
+            cand["s"] > 0
+            and cand["s"] < best["s"]
+            and cand["s"] > cur["s"] - 2e-3
+            and qp_time < 0.3 * (now - p2_start) + 1.0
+            and now < p2_end
+        ):
+            tq = time.time()
+            q = polish(cand["c"], cand["r"], n, min(p2_end, tq + 0.03 * budget), rounds=2, maxiter=qmaxiter)
+            qp_time += time.time() - tq
+            if q["s"] > cand["s"]:
+                cand = q
         prog = (time.time() - t0) / max(budget, 1e-9)
         T = 3e-4 * max(0.0, 1 - prog)
+        reward = 0.0
+        if cand["s"] > 0 and cand["s"] > cur["s"]:
+            reward = 0.3
         if cand["s"] > 0 and cand["s"] > cur["s"] - T * rng.exponential():
             cur = cand
+        add_pool(cand)
         if cand["s"] > best["s"]:
+            reward = 1.0
             best = cand
             cur = best
             stall = 0
@@ -398,11 +512,17 @@ def solve(n, budget, seed, out):
                     best = pol
                     cur = best
                     save(out, n, best)
+                    add_pool(best)
         else:
             stall += 1
-            if stall > 40:
-                cur = best
+            if stall > 30:
                 stall = 0
+                if pool:
+                    idx = min(int(rng.exponential(0.8)), len(pool) - 1)
+                    cur = pool[idx]
+                else:
+                    cur = best
+        W[k] = 0.9 * W[k] + 0.1 * reward
 
     # Phase 3: final polish of the best basin
     if time.time() < end and best["s"] > 0:

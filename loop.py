@@ -236,6 +236,17 @@ th{{background:#eee}}.win{{background:#c8f7c5}}.new{{background:#fff3b0}}h1{{mar
 <p>Record candidates: <code>best/pck/csqvN.pck</code> (Packomania submission format). Verify any file with <code>python problems/circle_packing/verify.py best/pck/csqvN.json</code>.</p>""")
 
 
+def publish():
+    """Fire-and-forget: push candidates to GitHub and email Packomania (approval-gated) via publish.py."""
+    os.makedirs(os.path.join(HERE, "runs"), exist_ok=True)
+    subprocess.Popen(
+        [sys.executable, os.path.join(HERE, "publish.py")],
+        cwd=HERE,
+        stdout=open(os.path.join(HERE, "runs", "publish.log"), "a"),
+        stderr=subprocess.STDOUT,
+    )
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ns", default=DEFAULT_NS)
@@ -288,6 +299,8 @@ def main():
             }
         )
         print(f"[iter {it}] seed total={total:.4f} wins={wins} improved={improved}")
+        if set(wins) & set(improved):
+            publish()
         it += 1
         if a.eval_only:
             return
@@ -340,8 +353,11 @@ def main():
         print(
             f"[iter {it}] {status} total={total:.4f} champ={champ_total:.4f} cost=${cost_total:.2f} wins={wins} improved={improved} | {idea}"
         )
+        if set(wins) & set(improved):
+            publish()
         it += 1
     print(f"done. champion total={champ_total:.4f} spend=${cost_total:.2f}")
+    publish()
 
 
 if __name__ == "__main__":

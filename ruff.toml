@@ -1,4 +1,5 @@
 line-length = 120
 exclude = ["best", "runs", "tmp"]
+force-exclude = true
 [lint]
 ignore = ["E741", "E731", "E402"]

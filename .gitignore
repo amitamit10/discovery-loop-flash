@@ -1,3 +1,6 @@
 runs/
 tmp/
 __pycache__/
+.dashclaw-local/
+.offlocal/
+.ruff_cache/
