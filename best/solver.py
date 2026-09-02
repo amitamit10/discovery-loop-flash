@@ -1,13 +1,18 @@
-"""Basin-hopping solver for csqv: hex-lattice template inits, sparse-neighbour penalty L-BFGS-B, adaptive move
-selection incl. half-plane crossover with elite pool, LP-optimal radii for fixed centres, SLSQP active-set polish
-on the contact graph, final strict shrink.
+"""Island-model basin-hopping solver for csqv: hex-lattice template inits (incl. under-full lattice + strip fill),
+sparse-neighbour penalty L-BFGS-B, adaptive move selection incl. half-plane crossover with elite pool, LP-optimal
+radii for fixed centres, SLSQP active-set polish on the contact graph, final strict shrink. Independent chains run in
+worker processes (one per available core) and exchange elites through atomic JSON files.
 Interface: python solver.py --n N --time SECONDS --seed S --out PATH
 """
+
+import os
+
+for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+    os.environ.setdefault(_v, "1")
 
 import argparse
 import json
 import math
-import os
 import time
 import numpy as np
 from scipy.optimize import minimize, linprog
@@ -166,6 +171,27 @@ def trivial(n):
     return evaluate(c, np.full(n, r))
 
 
+def load_candidate(path, n):
+    """Read a packing JSON written by this solver (or a sibling worker); return a verified solution dict or None."""
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        circ = data.get("circles")
+        if not circ or len(circ) != n:
+            return None
+        arr = np.array(circ, float)
+        if arr.shape != (n, 3) or not np.isfinite(arr).all():
+            return None
+        c = arr[:, :2].copy()
+        r = arr[:, 2].copy()
+        s, circ2 = feasible_sum(c, r)
+        if s <= 0:
+            return None
+        return {"s": s, "circ": circ2, "c": c, "r": r}
+    except Exception:
+        return None
+
+
 # ----------------------------------------------------------------------------- SLSQP active-set polish
 def polish(c, r, n, deadline, rounds=4, maxiter=120):
     best = evaluate(c, r)
@@ -274,68 +300,6 @@ def polish(c, r, n, deadline, rounds=4, maxiter=120):
 
 
 # ----------------------------------------------------------------------------- init & moves
-def hex_lattice(n, rng):
-    s3 = math.sqrt(3.0)
-    cands = []
-    base = max(2, int(math.sqrt(n)))
-    for nc in range(max(2, base - 3), base + 5):
-        for variant in (0, 1):
-            wunits = nc if variant == 0 else nc + 0.5
-            r = 0.5 / wunits
-            nr = int((1 - 2 * r) / (s3 * r) + 1e-9) + 1
-            if variant == 0:
-                cnt = sum(nc - (i % 2) for i in range(nr))
-            else:
-                cnt = nc * nr
-            if cnt >= n:
-                cands.append((r, nc, nr, variant))
-    if not cands:
-        return None
-    cands.sort(key=lambda t: -t[0])
-    r, nc, nr, variant = cands[int(min(rng.integers(0, 3), len(cands) - 1))]
-    pts = []
-    for i in range(nr):
-        y = r + i * s3 * r
-        m = nc - (i % 2) if variant == 0 else nc
-        x0 = r + (i % 2) * r
-        for j in range(m):
-            pts.append((x0 + 2 * r * j, y))
-    pts = np.array(pts)
-    pts[:, 1] += 0.5 * (1 - (pts[:, 1].max() + r))
-    extra = len(pts) - n
-    if extra > 0:
-        if rng.random() < 0.5:
-            keep = rng.permutation(len(pts))[:n]
-        else:
-            th = rng.uniform(0, 2 * math.pi)
-            key = pts @ np.array([math.cos(th), math.sin(th)]) + rng.normal(0, 0.3 * r, len(pts))
-            keep = np.argsort(key)[:n]
-        pts = pts[keep]
-    if rng.random() < 0.5:
-        pts = pts[:, ::-1].copy()
-    c = np.clip(pts + rng.normal(0, 0.1 * r, pts.shape), 0.02, 0.98)
-    rad = r * rng.uniform(0.85, 1.0, n)
-    return c, rad
-
-
-def init(n, rng):
-    u = rng.random()
-    if u < 0.5 and n >= 6:
-        h = hex_lattice(n, rng)
-        if h is not None:
-            return h
-        u = 0.9
-    if u < 0.7:
-        c = rng.random((n, 2))
-    else:
-        k = math.ceil(math.sqrt(n))
-        pts = np.array([[(j + 0.5) / k, (i + 0.5) / k] for i in range(k) for j in range(k)])
-        pts = pts[rng.permutation(len(pts))[:n]]
-        c = np.clip(pts + rng.normal(0, 0.02, pts.shape), 0.02, 0.98)
-    r = np.full(n, 0.4 / math.sqrt(n)) * rng.uniform(0.5, 1.5, n)
-    return c, r
-
-
 def fill_holes(ck, rk, k, rng, samples=3000):
     P = rng.random((samples, 2))
     wall = np.minimum(np.minimum(P[:, 0], 1 - P[:, 0]), np.minimum(P[:, 1], 1 - P[:, 1]))
@@ -352,6 +316,92 @@ def fill_holes(ck, rk, k, rng, samples=3000):
         rs[t] = hr
         h = np.minimum(h, np.sqrt(((P - P[j]) ** 2).sum(1)) - hr)
     return cs, rs
+
+
+def hex_lattice(n, rng):
+    s3 = math.sqrt(3.0)
+    full, part = [], []
+    base = max(2, int(math.sqrt(n)))
+    lo = n - max(2, int(0.15 * n))
+    for nc in range(max(2, base - 3), base + 5):
+        for variant in (0, 1):
+            wunits = nc if variant == 0 else nc + 0.5
+            r = 0.5 / wunits
+            nr = int((1 - 2 * r) / (s3 * r) + 1e-9) + 1
+            for rows in (nr, nr - 1):
+                if rows < 1:
+                    continue
+                cnt = sum(nc - (i % 2) for i in range(rows)) if variant == 0 else nc * rows
+                if cnt >= n:
+                    if rows == nr:
+                        full.append((r, nc, rows, variant))
+                elif cnt >= lo:
+                    part.append((r, nc, rows, variant))
+    if not full and not part:
+        return None
+    use_part = bool(part) and (not full or rng.random() < 0.4)
+    cands = part if use_part else full
+    cands.sort(key=lambda t: -t[0])
+    r, nc, nr, variant = cands[int(min(rng.integers(0, 3), len(cands) - 1))]
+    pts = []
+    for i in range(nr):
+        y = r + i * s3 * r
+        m = nc - (i % 2) if variant == 0 else nc
+        x0 = r + (i % 2) * r
+        for j in range(m):
+            pts.append((x0 + 2 * r * j, y))
+    pts = np.array(pts)
+    slack = 1 - (pts[:, 1].max() + r)
+    rad = np.full(len(pts), r)
+    if use_part:
+        # under-full lattice: leave the leftover strip on one side and fill it (and other holes) greedily
+        if rng.random() < 0.5:
+            pts[:, 1] += slack
+        extra = n - len(pts)
+        cs, rs = fill_holes(pts, rad, extra, rng, samples=4000)
+        pts = np.concatenate([pts, cs])
+        rad = np.concatenate([rad, 0.9 * rs])
+    else:
+        pts[:, 1] += 0.5 * slack
+        extra = len(pts) - n
+        if extra > 0:
+            if rng.random() < 0.5:
+                keep = rng.permutation(len(pts))[:n]
+            else:
+                th = rng.uniform(0, 2 * math.pi)
+                key = pts @ np.array([math.cos(th), math.sin(th)]) + rng.normal(0, 0.3 * r, len(pts))
+                keep = np.argsort(key)[:n]
+            pts = pts[keep]
+            rad = rad[keep]
+    if len(pts) != n:
+        return None
+    if rng.random() < 0.5:
+        pts = pts[:, ::-1].copy()
+    c = np.clip(pts + rng.normal(0, 0.1 * r, pts.shape), 0.02, 0.98)
+    rad = rad * rng.uniform(0.85, 1.0, n)
+    return c, rad
+
+
+def init(n, rng):
+    u = rng.random()
+    if u < 0.5 and n >= 6:
+        h = None
+        try:
+            h = hex_lattice(n, rng)
+        except Exception:
+            h = None
+        if h is not None:
+            return h
+        u = 0.9
+    if u < 0.7:
+        c = rng.random((n, 2))
+    else:
+        k = math.ceil(math.sqrt(n))
+        pts = np.array([[(j + 0.5) / k, (i + 0.5) / k] for i in range(k) for j in range(k)])
+        pts = pts[rng.permutation(len(pts))[:n]]
+        c = np.clip(pts + rng.normal(0, 0.02, pts.shape), 0.02, 0.98)
+    r = np.full(n, 0.4 / math.sqrt(n)) * rng.uniform(0.5, 1.5, n)
+    return c, r
 
 
 def relocate(c, r, rng, k):
@@ -500,9 +550,10 @@ def save(out, n, best):
             json.dump(data, f)
 
 
-def solve(n, budget, seed, out):
+def solve(n, budget, seed, out, t0=None, peers=()):
     rng = np.random.default_rng(seed)
-    t0 = time.time()
+    if t0 is None:
+        t0 = time.time()
     reserve = min(5.0, max(0.5, 0.05 * budget))
     end = t0 + budget - reserve
     p1_end = t0 + 0.25 * budget
@@ -526,7 +577,22 @@ def solve(n, budget, seed, out):
         pool.sort(key=lambda p: -p["s"])
         del pool[8:]
 
-    # Phase 1: cold multi-start (hex / square / random templates)
+    exch_dt = max(1.0, 0.04 * budget)
+    next_exch = [time.time() + exch_dt]
+
+    def exchange(force=False):
+        # island model: pull sibling workers' current bests into the elite pool (crossover partners / restarts)
+        if not peers:
+            return
+        if not force and time.time() < next_exch[0]:
+            return
+        next_exch[0] = time.time() + exch_dt
+        for path in peers:
+            cand = load_candidate(path, n)
+            if cand is not None:
+                add_pool(cand)
+
+    # Phase 1: cold multi-start (hex / hex+strip / square / random templates)
     starts = 0
     while time.time() < p1_end or starts < 2:
         if time.time() > end:
@@ -549,6 +615,7 @@ def solve(n, budget, seed, out):
             best = cand
             save(out, n, best)
     add_pool(best)
+    exchange(True)
 
     # Phase 2: basin hopping on the incumbent with adaptive operator selection
     cur = best
@@ -559,6 +626,7 @@ def solve(n, budget, seed, out):
     p2_start = time.time()
     qmaxiter = 60 if n <= 60 else 40
     while time.time() < p2_end and cur["s"] > 0:
+        exchange()
         p = (0.1 + W) / (0.1 + W).sum()
         k = int(rng.choice(len(OPS), p=p))
         ctx = {"pool": pool, "cur_s": cur["s"]}
@@ -609,6 +677,7 @@ def solve(n, budget, seed, out):
             stall += 1
             if stall > 30:
                 stall = 0
+                exchange(True)
                 if pool:
                     idx = min(int(rng.exponential(0.8)), len(pool) - 1)
                     cur = pool[idx]
@@ -625,12 +694,125 @@ def solve(n, budget, seed, out):
     return best
 
 
-if __name__ == "__main__":
+# ----------------------------------------------------------------------------- island orchestration
+def cpu_quota():
+    try:
+        with open("/sys/fs/cgroup/cpu.max") as f:
+            parts = f.read().split()
+        if parts and parts[0] != "max":
+            return max(1, int(parts[0]) // int(parts[1]))
+    except Exception:
+        pass
+    try:
+        with open("/sys/fs/cgroup/cpu/cpu.cfs_quota_us") as f:
+            q = int(f.read().strip())
+        with open("/sys/fs/cgroup/cpu/cpu.cfs_period_us") as f:
+            p = int(f.read().strip())
+        if q > 0 and p > 0:
+            return max(1, q // p)
+    except Exception:
+        pass
+    return None
+
+
+def pick_workers(budget):
+    env = os.environ.get("CSQV_WORKERS")
+    if env:
+        try:
+            return max(1, int(env))
+        except ValueError:
+            pass
+    if budget < 10:
+        return 1
+    try:
+        ncpu = len(os.sched_getaffinity(0))
+    except Exception:
+        ncpu = os.cpu_count() or 1
+    q = cpu_quota()
+    if q:
+        ncpu = min(ncpu, q)
+    try:
+        ncpu = min(ncpu, int(ncpu - os.getloadavg()[0] + 0.5))
+    except Exception:
+        pass
+    return max(1, min(ncpu, 8))
+
+
+def worker_main(n, budget, seed, out, t0, peers):
+    try:
+        best = solve(n, budget, seed, out, t0=t0, peers=peers)
+        save(out, n, best)
+    except Exception:
+        pass
+
+
+def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, required=True)
     ap.add_argument("--time", type=float, default=60)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
-    best = solve(a.n, a.time, a.seed, a.out)
-    save(a.out, a.n, best)
+    t0 = time.time()
+    n, budget, out = a.n, a.time, a.out
+    reserve = min(5.0, max(0.5, 0.05 * budget))
+    procs, peers = [], []
+    nw = pick_workers(budget) if n > 1 else 1
+    if nw > 1:
+        try:
+            import multiprocessing as mp
+
+            methods = mp.get_all_start_methods()
+            ctx = mp.get_context("fork") if "fork" in methods else mp.get_context()
+            files = [out] + ["%s.w%d" % (out, w) for w in range(1, nw)]
+            for w in range(1, nw):
+                others = [f for f in files if f != files[w]]
+                p = ctx.Process(
+                    target=worker_main,
+                    args=(n, budget, a.seed + 7919 * w, files[w], t0, others),
+                    daemon=True,
+                )
+                p.start()
+                procs.append(p)
+                peers.append(files[w])
+        except Exception:
+            pass
+    best = None
+    try:
+        best = solve(n, budget, a.seed, out, t0=t0, peers=peers)
+    except Exception:
+        best = None
+    if best is None or best["s"] <= 0:
+        best = load_candidate(out, n) or trivial(n)
+    join_until = t0 + budget - 0.5 * reserve
+    for p in procs:
+        try:
+            p.join(max(0.0, join_until - time.time()))
+        except Exception:
+            pass
+    for path in peers:
+        cand = load_candidate(path, n)
+        if cand is not None and cand["s"] > best["s"]:
+            best = cand
+    save(out, n, best)
+    for p in procs:
+        try:
+            if p.is_alive():
+                p.terminate()
+        except Exception:
+            pass
+    for p in procs:
+        try:
+            p.join(1.0)
+        except Exception:
+            pass
+    for path in peers:
+        for f in (path, path + ".tmp"):
+            try:
+                os.remove(f)
+            except Exception:
+                pass
+
+
+if __name__ == "__main__":
+    main()
