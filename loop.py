@@ -69,7 +69,7 @@ class Loop:
             p = subprocess.run(
                 [sys.executable, solver, *self.P.solver_argv(target, budget, seed, out)],
                 capture_output=True,
-                text=True,
+                text=True, encoding="utf-8", errors="replace",
                 timeout=budget + 45,
                 env=env,
             )
@@ -178,7 +178,7 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
             "You are an expert in numerical and combinatorial optimisation. Output only what is asked.",
         ]
         p = subprocess.run(
-            cmd, input=prompt, capture_output=True, text=True, env=env, timeout=900, shell=(os.name == "nt")
+            cmd, input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=900, shell=(os.name == "nt")
         )
         try:
             j = json.loads(p.stdout)

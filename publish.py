@@ -28,7 +28,7 @@ REL_GAIN = 1e-6  # re-submit a target only if it improved by at least this (rela
 
 
 def sh(*cmd, cwd=HERE):
-    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
 
 
 def candidates(P, best, rec, ledger):
