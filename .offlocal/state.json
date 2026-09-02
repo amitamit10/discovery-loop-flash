@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "workspaces": [
+    {
+      "id": "ws_4d7cfd42e449",
+      "name": "default",
+      "createdAt": "2026-09-02T10:18:46.041Z"
+    }
+  ],
+  "projects": [],
+  "environments": [],
+  "connections": [],
+  "mappings": [],
+  "policyRules": [],
+  "pendingApprovals": [],
+  "defaultWorkspaceId": "ws_4d7cfd42e449"
+}
