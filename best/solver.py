@@ -1,5 +1,6 @@
-"""Basin-hopping solver for csqv: sparse-neighbour penalty L-BFGS-B, adaptive move selection, elite pool,
-LP-optimal radii for fixed centres, SLSQP active-set polish on the contact graph, final strict shrink.
+"""Basin-hopping solver for csqv: hex-lattice template inits, sparse-neighbour penalty L-BFGS-B, adaptive move
+selection incl. half-plane crossover with elite pool, LP-optimal radii for fixed centres, SLSQP active-set polish
+on the contact graph, final strict shrink.
 Interface: python solver.py --n N --time SECONDS --seed S --out PATH
 """
 
@@ -273,15 +274,59 @@ def polish(c, r, n, deadline, rounds=4, maxiter=120):
 
 
 # ----------------------------------------------------------------------------- init & moves
+def hex_lattice(n, rng):
+    s3 = math.sqrt(3.0)
+    cands = []
+    base = max(2, int(math.sqrt(n)))
+    for nc in range(max(2, base - 3), base + 5):
+        for variant in (0, 1):
+            wunits = nc if variant == 0 else nc + 0.5
+            r = 0.5 / wunits
+            nr = int((1 - 2 * r) / (s3 * r) + 1e-9) + 1
+            if variant == 0:
+                cnt = sum(nc - (i % 2) for i in range(nr))
+            else:
+                cnt = nc * nr
+            if cnt >= n:
+                cands.append((r, nc, nr, variant))
+    if not cands:
+        return None
+    cands.sort(key=lambda t: -t[0])
+    r, nc, nr, variant = cands[int(min(rng.integers(0, 3), len(cands) - 1))]
+    pts = []
+    for i in range(nr):
+        y = r + i * s3 * r
+        m = nc - (i % 2) if variant == 0 else nc
+        x0 = r + (i % 2) * r
+        for j in range(m):
+            pts.append((x0 + 2 * r * j, y))
+    pts = np.array(pts)
+    pts[:, 1] += 0.5 * (1 - (pts[:, 1].max() + r))
+    extra = len(pts) - n
+    if extra > 0:
+        if rng.random() < 0.5:
+            keep = rng.permutation(len(pts))[:n]
+        else:
+            th = rng.uniform(0, 2 * math.pi)
+            key = pts @ np.array([math.cos(th), math.sin(th)]) + rng.normal(0, 0.3 * r, len(pts))
+            keep = np.argsort(key)[:n]
+        pts = pts[keep]
+    if rng.random() < 0.5:
+        pts = pts[:, ::-1].copy()
+    c = np.clip(pts + rng.normal(0, 0.1 * r, pts.shape), 0.02, 0.98)
+    rad = r * rng.uniform(0.85, 1.0, n)
+    return c, rad
+
+
 def init(n, rng):
     u = rng.random()
-    if u < 0.4:
+    if u < 0.5 and n >= 6:
+        h = hex_lattice(n, rng)
+        if h is not None:
+            return h
+        u = 0.9
+    if u < 0.7:
         c = rng.random((n, 2))
-    elif u < 0.75:
-        k = math.ceil(math.sqrt(n))
-        pts = np.array([[(j + 0.5 * (i % 2)) / k, i / k] for i in range(k + 1) for j in range(k + 1)])
-        pts = pts[rng.permutation(len(pts))[:n]]
-        c = np.clip(pts + rng.normal(0, 0.02, pts.shape), 0.02, 0.98)
     else:
         k = math.ceil(math.sqrt(n))
         pts = np.array([[(j + 0.5) / k, (i + 0.5) / k] for i in range(k) for j in range(k)])
@@ -291,26 +336,34 @@ def init(n, rng):
     return c, r
 
 
+def fill_holes(ck, rk, k, rng, samples=3000):
+    P = rng.random((samples, 2))
+    wall = np.minimum(np.minimum(P[:, 0], 1 - P[:, 0]), np.minimum(P[:, 1], 1 - P[:, 1]))
+    if len(ck):
+        h = np.minimum((np.sqrt(((P[:, None, :] - ck[None, :, :]) ** 2).sum(-1)) - rk[None, :]).min(1), wall)
+    else:
+        h = wall
+    cs = np.zeros((k, 2))
+    rs = np.zeros(k)
+    for t in range(k):
+        j = int(np.argmax(h))
+        hr = max(float(h[j]), 1e-3)
+        cs[t] = P[j]
+        rs[t] = hr
+        h = np.minimum(h, np.sqrt(((P - P[j]) ** 2).sum(1)) - hr)
+    return cs, rs
+
+
 def relocate(c, r, rng, k):
     n = len(c)
     rbar = max(float(r.mean()), 1e-6)
     idx = np.argsort(r + rng.normal(0, 0.3 * rbar, n))[:k]
     keep = np.ones(n, bool)
     keep[idx] = False
-    ck, rk = c[keep], r[keep]
-    P = rng.random((3000, 2))
-    wall = np.minimum(np.minimum(P[:, 0], 1 - P[:, 0]), np.minimum(P[:, 1], 1 - P[:, 1]))
-    if len(ck):
-        h = np.minimum((np.sqrt(((P[:, None, :] - ck[None, :, :]) ** 2).sum(-1)) - rk[None, :]).min(1), wall)
-    else:
-        h = wall
+    cs, rs = fill_holes(c[keep], r[keep], k, rng)
     c2, r2 = c.copy(), r.copy()
-    for i in idx:
-        j = int(np.argmax(h))
-        hr = max(float(h[j]), 1e-3)
-        c2[i] = P[j]
-        r2[i] = hr
-        h = np.minimum(h, np.sqrt(((P - P[j]) ** 2).sum(1)) - hr)
+    c2[idx] = cs
+    r2[idx] = rs
     return c2, r2
 
 
@@ -319,7 +372,7 @@ def _clip(c):
 
 
 def op_jitter(scale):
-    def f(c, r, rng, n):
+    def f(c, r, rng, n, ctx):
         rbar = max(float(r.mean()), 1e-6)
         c2 = c + rng.normal(0, rbar * scale, c.shape)
         return _clip(c2), r.copy(), (1e3, 1e4, 1e5)
@@ -327,7 +380,7 @@ def op_jitter(scale):
     return f
 
 
-def op_subset(c, r, rng, n):
+def op_subset(c, r, rng, n, ctx):
     rbar = max(float(r.mean()), 1e-6)
     k = max(1, int(n * rng.uniform(0.1, 0.3)))
     idx = rng.choice(n, k, replace=False)
@@ -337,7 +390,7 @@ def op_subset(c, r, rng, n):
 
 
 def op_relocate(kmax):
-    def f(c, r, rng, n):
+    def f(c, r, rng, n, ctx):
         k = int(rng.integers(1, min(kmax, n) + 1))
         c2, r2 = relocate(c, r, rng, k)
         return _clip(c2), r2, (1e2, 1e3, 1e4, 1e5)
@@ -345,7 +398,7 @@ def op_relocate(kmax):
     return f
 
 
-def op_swap(c, r, rng, n):
+def op_swap(c, r, rng, n, ctx):
     order = np.argsort(r)
     q = max(1, n // 3)
     i = order[rng.integers(0, q)]
@@ -355,7 +408,7 @@ def op_swap(c, r, rng, n):
     return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
 
 
-def op_bignudge(c, r, rng, n):
+def op_bignudge(c, r, rng, n, ctx):
     rbar = max(float(r.mean()), 1e-6)
     order = np.argsort(r)
     q = max(1, n // 3)
@@ -366,7 +419,7 @@ def op_bignudge(c, r, rng, n):
     return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
 
 
-def op_reinsert(c, r, rng, n):
+def op_reinsert(c, r, rng, n, ctx):
     rbar = max(float(r.mean()), 1e-6)
     k = int(rng.integers(1, min(3, n) + 1))
     idx = rng.choice(n, k, replace=False)
@@ -376,8 +429,7 @@ def op_reinsert(c, r, rng, n):
     return _clip(c2), r2, (1e2, 1e3, 1e4, 1e5)
 
 
-def op_local(c, r, rng, n):
-    # jitter a spatial neighbourhood around a random circle
+def op_local(c, r, rng, n, ctx):
     rbar = max(float(r.mean()), 1e-6)
     i = rng.integers(0, n)
     d = np.sqrt(((c - c[i]) ** 2).sum(1))
@@ -385,6 +437,39 @@ def op_local(c, r, rng, n):
     c2 = c.copy()
     c2[idx] += rng.normal(0, rbar * 0.5, (len(idx), 2))
     return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
+
+
+def op_cross(c, r, rng, n, ctx):
+    # half-plane crossover: keep incumbent on one side of a random line, splice an elite's circles on the other side
+    pool = ctx["pool"]
+    partners = [p for p in pool if abs(p["s"] - ctx["cur_s"]) > 1e-9 and len(p["c"]) == n]
+    if not partners:
+        return op_subset(c, r, rng, n, ctx)
+    p = partners[int(rng.integers(0, len(partners)))]
+    th = rng.uniform(0, math.pi)
+    nv = np.array([math.cos(th), math.sin(th)])
+    q = rng.uniform(0.25, 0.75, 2)
+    sa = (c - q) @ nv
+    sb = (p["c"] - q) @ nv
+    A = sa <= 0
+    B = sb > 0
+    cA, rA = c[A], r[A]
+    cB, rB = p["c"][B], p["r"][B]
+    if len(cA) and len(cB):
+        d = np.sqrt(((cB[:, None, :] - cA[None, :, :]) ** 2).sum(-1)) - rA[None, :] - rB[:, None]
+        ok = d.min(1) > -0.5 * rB
+        cB, rB = cB[ok], rB[ok]
+    c2 = np.concatenate([cA, cB]) if len(cB) else cA.copy()
+    r2 = np.concatenate([rA, rB]) if len(rB) else rA.copy()
+    m = len(c2)
+    if m > n:
+        keep = np.argsort(-r2)[:n]
+        c2, r2 = c2[keep], r2[keep]
+    elif m < n:
+        cs, rs = fill_holes(c2, r2, n - m, rng)
+        c2 = np.concatenate([c2, cs]) if m else cs
+        r2 = np.concatenate([r2, rs]) if m else rs
+    return _clip(c2), r2, (1e2, 1e3, 1e4, 1e5)
 
 
 OPS = [
@@ -398,6 +483,7 @@ OPS = [
     op_bignudge,
     op_reinsert,
     op_local,
+    op_cross,
 ]
 
 
@@ -438,14 +524,17 @@ def solve(n, budget, seed, out):
                 return
         pool.append(sol)
         pool.sort(key=lambda p: -p["s"])
-        del pool[6:]
+        del pool[8:]
 
-    # Phase 1: cold multi-start
+    # Phase 1: cold multi-start (hex / square / random templates)
     starts = 0
     while time.time() < p1_end or starts < 2:
         if time.time() > end:
             break
-        c, r = init(n, rng)
+        try:
+            c, r = init(n, rng)
+        except Exception:
+            c, r = rng.random((n, 2)), np.full(n, 0.4 / math.sqrt(n))
         c, r = run_penalty(c, r, n, (10, 100, 1e3, 1e4, 1e5), 300, end)
         cand = evaluate(c, lp_radii(c, r))
         starts += 1
@@ -472,8 +561,11 @@ def solve(n, budget, seed, out):
     while time.time() < p2_end and cur["s"] > 0:
         p = (0.1 + W) / (0.1 + W).sum()
         k = int(rng.choice(len(OPS), p=p))
+        ctx = {"pool": pool, "cur_s": cur["s"]}
         try:
-            c, r, mus = OPS[k](cur["c"], cur["r"], rng, n)
+            c, r, mus = OPS[k](cur["c"], cur["r"], rng, n, ctx)
+            if len(c) != n or len(r) != n:
+                continue
         except Exception:
             continue
         c, r = run_penalty(c, r, n, mus, 200, end)
