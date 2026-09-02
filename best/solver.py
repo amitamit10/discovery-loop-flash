@@ -1,8 +1,9 @@
 """Island-model basin-hopping solver for csqv: hex-lattice template inits (incl. under-full lattice + strip fill),
 affine-lattice template bank (rotated / sheared / anisotropic hex lattices sized by bisection to hold exactly n sites),
 sparse-neighbour penalty L-BFGS-B, adaptive move selection incl. half-plane crossover with elite pool, LP-optimal
-radii for fixed centres, SLSQP active-set polish on the contact graph, final strict shrink. Independent chains run in
-worker processes (one per available core) and exchange elites through atomic JSON files.
+radii for fixed centres, fast exact KKT-Newton active-set polish on the contact graph for every candidate,
+SLSQP polish on new bests, final strict shrink. Independent chains run in worker processes (one per available core)
+and exchange elites through atomic JSON files.
 Interface: python solver.py --n N --time SECONDS --seed S --out PATH
 """
 
@@ -193,6 +194,162 @@ def load_candidate(path, n):
         return None
 
 
+# ----------------------------------------------------------------------------- KKT-Newton active-set polish
+def newton_polish(c, r, n, deadline, rounds=3, iters=8):
+    """Exact polish of a near-optimal packing: treat the near-active contact/wall constraints as equalities and run
+    Newton on the KKT system (linear objective, quadratic constraints -> constant Lagrangian Hessian). Constraints
+    with negative multipliers are dropped and newly violated ones added between rounds. Always finished by LP radii
+    and a strict feasibility check, so a bad step can only waste time, never produce an infeasible result."""
+    best = evaluate(c, r)
+    if n < 2 or time.time() > deadline:
+        return best
+    try:
+        n2, n3 = 2 * n, 3 * n
+        z = np.concatenate([c.ravel(), r]).astype(float)
+        I0, J0 = np.triu_indices(n, 1)
+        rbar = max(float(r.mean()), 1e-6)
+        tol = 2e-3 * rbar
+        gf = np.zeros(n3)
+        gf[n2:] = -1.0
+        C = z[:n2].reshape(n, 2)
+        R = z[n2:]
+        gap = np.sqrt(((C[I0] - C[J0]) ** 2).sum(1)) - R[I0] - R[J0]
+        act = gap < tol
+        wg = np.concatenate([C[:, 0] - R, 1 - C[:, 0] - R, C[:, 1] - R, 1 - C[:, 1] - R])
+        wact = wg < tol
+        rho = 1e-8
+        delta = 1e-10
+        idx3 = np.arange(n3)
+        for _rnd in range(rounds):
+            if time.time() > deadline:
+                break
+            I = I0[act]
+            J = J0[act]
+            m = len(I)
+            wI = np.nonzero(wact)[0]
+            side = wI // n
+            wi = wI % n
+            wcol = 2 * wi + (side >= 2)
+            wsgn = np.where(side % 2 == 0, 1.0, -1.0)
+            wconst = np.where(side % 2 == 1, 1.0, 0.0)
+            mw = len(wI)
+            M = m + mw
+            if M == 0 or M > 6 * n + 8:
+                break
+            rows = np.arange(m)
+            wr = m + np.arange(mw)
+            idxM = n3 + np.arange(M)
+            lam = None
+            for it in range(iters):
+                if time.time() > deadline:
+                    break
+                C = z[:n2].reshape(n, 2)
+                R = z[n2:]
+                dx = C[I, 0] - C[J, 0]
+                dy = C[I, 1] - C[J, 1]
+                g = np.empty(M)
+                g[:m] = dx * dx + dy * dy - (R[I] + R[J]) ** 2
+                g[m:] = wconst + wsgn * z[wcol] - R[wi]
+                Jm = np.zeros((M, n3))
+                Jm[rows, 2 * I] = 2 * dx
+                Jm[rows, 2 * J] = -2 * dx
+                Jm[rows, 2 * I + 1] = 2 * dy
+                Jm[rows, 2 * J + 1] = -2 * dy
+                s = -2 * (R[I] + R[J])
+                Jm[rows, n2 + I] = s
+                Jm[rows, n2 + J] = s
+                Jm[wr, wcol] = wsgn
+                Jm[wr, n2 + wi] = -1.0
+                if lam is None:
+                    G = Jm @ Jm.T
+                    reg = 1e-10 * (1.0 + float(np.trace(G)) / M)
+                    G[np.arange(M), np.arange(M)] += reg
+                    try:
+                        lam = np.linalg.solve(G, Jm @ gf)
+                    except Exception:
+                        lam = np.linalg.lstsq(Jm.T, gf, rcond=None)[0]
+                    if not np.isfinite(lam).all():
+                        lam = None
+                        break
+                stat = gf - Jm.T @ lam
+                if it > 0 and abs(g).max() < 1e-15 and abs(stat).max() < 1e-12:
+                    break
+                W = np.zeros((n3, n3))
+                if m:
+                    lp = 2.0 * lam[:m]
+                    for a, b, sg in (
+                        (2 * I, 2 * I, -1.0),
+                        (2 * J, 2 * J, -1.0),
+                        (2 * I, 2 * J, 1.0),
+                        (2 * J, 2 * I, 1.0),
+                        (2 * I + 1, 2 * I + 1, -1.0),
+                        (2 * J + 1, 2 * J + 1, -1.0),
+                        (2 * I + 1, 2 * J + 1, 1.0),
+                        (2 * J + 1, 2 * I + 1, 1.0),
+                        (n2 + I, n2 + I, 1.0),
+                        (n2 + J, n2 + J, 1.0),
+                        (n2 + I, n2 + J, 1.0),
+                        (n2 + J, n2 + I, 1.0),
+                    ):
+                        np.add.at(W, (a, b), sg * lp)
+                N = n3 + M
+                K = np.zeros((N, N))
+                K[:n3, :n3] = W
+                K[idx3, idx3] += rho
+                K[:n3, n3:] = -Jm.T
+                K[n3:, :n3] = Jm
+                K[idxM, idxM] = -delta
+                rhs = np.concatenate([-stat, -g])
+                sol = None
+                try:
+                    sol = np.linalg.solve(K, rhs)
+                    if not np.isfinite(sol).all() or abs(K @ sol - rhs).max() > 1e-8 * (1.0 + abs(rhs).max()):
+                        sol = None
+                except Exception:
+                    sol = None
+                if sol is None:
+                    try:
+                        sol = np.linalg.lstsq(K, rhs, rcond=None)[0]
+                    except Exception:
+                        break
+                    if not np.isfinite(sol).all():
+                        break
+                p = sol[:n3]
+                dl = sol[n3:]
+                pm = float(abs(p).max())
+                cap = 0.5 * rbar
+                alpha = 1.0 if pm <= cap else cap / pm
+                z = z + alpha * p
+                lam = lam + alpha * dl
+                z[:n2] = np.clip(z[:n2], 0.0, 1.0)
+                z[n2:] = np.clip(z[n2:], 1e-9, 0.5)
+                if alpha * pm < 1e-15:
+                    break
+            C2 = z[:n2].reshape(n, 2).copy()
+            R2 = z[n2:].copy()
+            for rr in (R2, lp_radii(C2, R2)):
+                cand = evaluate(C2, rr)
+                if cand["s"] > best["s"]:
+                    best = cand
+            gap2 = np.sqrt(((C2[I0] - C2[J0]) ** 2).sum(1)) - R2[I0] - R2[J0]
+            bad = (gap2 < -1e-11) & ~act
+            wg2 = np.concatenate([C2[:, 0] - R2, 1 - C2[:, 0] - R2, C2[:, 1] - R2, 1 - C2[:, 1] - R2])
+            wbad = (wg2 < -1e-11) & ~wact
+            neg = np.zeros(M, bool) if lam is None else (lam < -1e-7)
+            if not bad.any() and not wbad.any() and not neg.any():
+                break
+            if neg.any():
+                ai = np.nonzero(act)[0]
+                act[ai[neg[:m]]] = False
+                wa = np.nonzero(wact)[0]
+                wact[wa[neg[m:]]] = False
+            act |= bad
+            wact |= wbad
+    except Exception:
+        pass
+    return best
+
+
 # ----------------------------------------------------------------------------- SLSQP active-set polish
 def polish(c, r, n, deadline, rounds=4, maxiter=120):
     best = evaluate(c, r)
@@ -300,6 +457,22 @@ def polish(c, r, n, deadline, rounds=4, maxiter=120):
     return best
 
 
+def full_polish(sol, n, deadline, budget, slsqp=True, rounds=4, maxiter=120):
+    """SLSQP (optional) followed by the exact Newton finish; returns the best strictly feasible result."""
+    best = sol
+    if best["s"] <= 0:
+        return best
+    if slsqp and time.time() < deadline:
+        q = polish(best["c"], best["r"], n, deadline, rounds=rounds, maxiter=maxiter)
+        if q["s"] > best["s"]:
+            best = q
+    if time.time() < deadline:
+        q = newton_polish(best["c"], best["r"], n, min(deadline, time.time() + 0.03 * budget))
+        if q["s"] > best["s"]:
+            best = q
+    return best
+
+
 # ----------------------------------------------------------------------------- init & moves
 def fill_holes(ck, rk, k, rng, samples=3000):
     P = rng.random((samples, 2))
@@ -355,7 +528,6 @@ def hex_lattice(n, rng):
     slack = 1 - (pts[:, 1].max() + r)
     rad = np.full(len(pts), r)
     if use_part:
-        # under-full lattice: leave the leftover strip on one side and fill it (and other holes) greedily
         if rng.random() < 0.5:
             pts[:, 1] += slack
         extra = n - len(pts)
@@ -383,9 +555,7 @@ def hex_lattice(n, rng):
     return c, rad
 
 
-# ---- affine lattice template bank: rotated / sheared / anisotropic hex lattices with exactly (or under) n sites
 def _lattice_pts(ua, ub, s, off, cap=6000):
-    """All sites off + i*s*ua + j*s*ub whose circle of radius r (half the shortest lattice vector) fits in the square."""
     a = s * ua
     b = s * ub
     dmin = s * min(
@@ -417,7 +587,6 @@ def _lattice_pts(ua, ub, s, off, cap=6000):
 
 
 def build_lattice_bank(n, rng, samples, deadline, keep=40):
-    """Sample lattice families, size each by bisection on the scale so it holds >= target sites, rank by radius."""
     bank = []
     lo_cnt = max(2, n - int(0.15 * n))
     for _ in range(samples):
@@ -626,7 +795,6 @@ def op_local(c, r, rng, n, ctx):
 
 
 def op_cross(c, r, rng, n, ctx):
-    # half-plane crossover: keep incumbent on one side of a random line, splice an elite's circles on the other side
     pool = ctx["pool"]
     partners = [p for p in pool if abs(p["s"] - ctx["cur_s"]) > 1e-9 and len(p["c"]) == n]
     if not partners:
@@ -717,7 +885,6 @@ def solve(n, budget, seed, out, t0=None, peers=()):
     next_exch = [time.time() + exch_dt]
 
     def exchange(force=False):
-        # island model: pull sibling workers' current bests into the elite pool (crossover partners / restarts)
         if not peers:
             return
         if not force and time.time() < next_exch[0]:
@@ -728,14 +895,13 @@ def solve(n, budget, seed, out, t0=None, peers=()):
             if cand is not None:
                 add_pool(cand)
 
-    # lattice template bank context (built lazily on first affine init, time-capped)
     ictx = {
         "bank": None,
         "samples": int(min(300, max(60, 4 * budget))),
         "bank_deadline": min(t0 + max(0.5, 0.03 * budget), end),
     }
 
-    # Phase 1: cold multi-start (hex / hex+strip / affine-lattice bank / square / random templates)
+    # Phase 1: cold multi-start, each finished by the exact Newton polish
     starts = 0
     while time.time() < p1_end or starts < 2:
         if time.time() > end:
@@ -747,27 +913,30 @@ def solve(n, budget, seed, out, t0=None, peers=()):
         c, r = run_penalty(c, r, n, (10, 100, 1e3, 1e4, 1e5), 300, end)
         cand = evaluate(c, lp_radii(c, r))
         starts += 1
+        if cand["s"] > 0 and time.time() < end:
+            q = newton_polish(cand["c"], cand["r"], n, min(end, time.time() + 0.02 * budget))
+            if q["s"] > cand["s"]:
+                cand = q
         add_pool(cand)
         if cand["s"] > best["s"]:
             best = cand
             save(out, n, best)
 
     if time.time() < end and best["s"] > 0:
-        cand = polish(best["c"], best["r"], n, min(end, time.time() + 0.12 * budget))
+        cand = full_polish(best, n, min(end, time.time() + 0.12 * budget), budget)
         if cand["s"] > best["s"]:
             best = cand
             save(out, n, best)
     add_pool(best)
     exchange(True)
 
-    # Phase 2: basin hopping on the incumbent with adaptive operator selection
+    # Phase 2: basin hopping on the incumbent with adaptive operator selection; Newton-exact candidate comparison
     cur = best
     stall = 0
     last_polish = time.time()
     W = np.ones(len(OPS))
-    qp_time = 0.0
+    nt_time = 0.0
     p2_start = time.time()
-    qmaxiter = 60 if n <= 60 else 40
     while time.time() < p2_end and cur["s"] > 0:
         exchange()
         p = (0.1 + W) / (0.1 + W).sum()
@@ -782,18 +951,17 @@ def solve(n, budget, seed, out, t0=None, peers=()):
         c, r = run_penalty(c, r, n, mus, 200, end)
         cand = evaluate(c, lp_radii(c, r))
         now = time.time()
-        if (
-            cand["s"] > 0
-            and cand["s"] < best["s"]
-            and cand["s"] > cur["s"] - 2e-3
-            and qp_time < 0.3 * (now - p2_start) + 1.0
-            and now < p2_end
-        ):
-            tq = time.time()
-            q = polish(cand["c"], cand["r"], n, min(p2_end, tq + 0.03 * budget), rounds=2, maxiter=qmaxiter)
-            qp_time += time.time() - tq
-            if q["s"] > cand["s"]:
-                cand = q
+        if cand["s"] > 0 and now < p2_end:
+            rbar = max(float(cur["r"].mean()), 1e-6)
+            same = len(cand["c"]) == len(cur["c"]) and float(np.abs(cand["c"] - cur["c"]).max()) < 0.02 * rbar
+            near = cand["s"] > cur["s"] - 3e-3
+            budget_ok = nt_time < 0.5 * (now - p2_start) + 1.0
+            if not same and (cand["s"] > cur["s"] - 5e-4 or (near and budget_ok)):
+                tq = time.time()
+                q = newton_polish(cand["c"], cand["r"], n, min(p2_end, tq + 0.02 * budget))
+                nt_time += time.time() - tq
+                if q["s"] > cand["s"]:
+                    cand = q
         prog = (time.time() - t0) / max(budget, 1e-9)
         T = 3e-4 * max(0.0, 1 - prog)
         reward = 0.0
@@ -808,9 +976,11 @@ def solve(n, budget, seed, out, t0=None, peers=()):
             cur = best
             stall = 0
             save(out, n, best)
-            if (n <= 60 or time.time() - last_polish > 0.15 * budget) and time.time() < p2_end:
-                pol = polish(best["c"], best["r"], n, min(p2_end, time.time() + 0.1 * budget))
-                last_polish = time.time()
+            if time.time() < p2_end:
+                use_slsqp = n <= 60 or time.time() - last_polish > 0.15 * budget
+                if use_slsqp:
+                    last_polish = time.time()
+                pol = full_polish(best, n, min(p2_end, time.time() + 0.1 * budget), budget, slsqp=use_slsqp)
                 if pol["s"] > best["s"]:
                     best = pol
                     cur = best
@@ -830,7 +1000,7 @@ def solve(n, budget, seed, out, t0=None, peers=()):
 
     # Phase 3: final polish of the best basin
     if time.time() < end and best["s"] > 0:
-        pol = polish(best["c"], best["r"], n, end)
+        pol = full_polish(best, n, end, budget)
         if pol["s"] > best["s"]:
             best = pol
             save(out, n, best)
