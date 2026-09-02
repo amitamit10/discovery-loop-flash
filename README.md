@@ -2,17 +2,23 @@
 
 An LLM evolves a solver program; a zero-tolerance checker scores it; winners survive. AlphaEvolve shape, one file.
 
-First problem: **Packomania csqv**, pack N variable-radius circles in the unit square maximising the sum of radii.
-Records are fetched live from packomania.com and every packing is verified with an independent stdlib checker.
+Problems are plug-ins under `problems/<name>/problem.py` (targets, live records, independent verifier, submission format, prompt):
+
+- **circle_packing**: Packomania csqv, pack N variable-radius circles in the unit square maximising the sum of radii.
+  Records fetched live from packomania.com; zero-tolerance stdlib checker; `.pck` submissions emailed to the maintainer.
+- **miplib**: MIPLIB 2017 *open* instances (real-world mixed-integer programs with no proven optimum). Best-known values from the
+  official `.solu` file; independent checker re-evaluates bounds, integrality and every row at 1e-6; `.sol` files emailed to
+  miplibsolutions@zib.de. Seed solver = HiGHS + adaptive LNS (`pip install highspy`).
 
 ```powershell
-python loop.py --eval-only                # score the champion solver, no model calls
-python loop.py --iters 40 --budget 30     # evolve (claude -p, Fable 5.1) until 40 iterations or $30
-start runs\status.html                    # human view: per-N standings, iterations, ideas tried
+python loop.py --problem miplib --eval-only               # score the champion solver, no model calls
+python loop.py --problem miplib --iters 20 --budget 30    # evolve (claude -p, Fable 5.1) until 20 iterations or $30
+start runs-miplib\status.html                             # human view: standings, iterations, ideas tried
+start runs\status.html                                    # same for circle_packing (legacy flat layout)
 ```
 
-Outputs: `best/solver.py` (champion), `best/pck/csqvN.pck` (record candidates in Packomania submission format),
-`runs/log.jsonl`, `runs/status.html`. Verify any candidate: `python problems/circle_packing/verify.py best/pck/csqvN.json`.
+Outputs per problem: `best*/solver.py` (champion), `best*/<sub>/` (candidates in the benchmark's submission format),
+`runs*/log.jsonl`, `runs*/status.html`. Verify any candidate with the problem's own `verify.py`.
 
 ## Publishing (nothing sits on this machine)
 
