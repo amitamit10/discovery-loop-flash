@@ -1,8 +1,10 @@
 """Island-model basin-hopping solver for csqv: hex-lattice template inits (incl. under-full lattice + strip fill),
 affine-lattice template bank (rotated / sheared / anisotropic hex lattices sized by bisection to hold exactly n sites),
-sparse-neighbour penalty L-BFGS-B, adaptive move selection incl. lattice-slip row/band moves and half-plane crossover
-with a dihedral-symmetry-augmented elite pool, LP-optimal radii for fixed centres, fast exact KKT-Newton active-set
-polish on the contact graph for every candidate, SLSQP polish on new bests, minimal-loss final strict shrink.
+sparse-neighbour penalty L-BFGS-B, adaptive move selection incl. lattice-slip row/band moves, half-plane crossover
+with a dihedral-symmetry-augmented elite pool and defect-migration moves (remove -> relax -> refill largest holes;
+insert -> relax -> evict weakest), LP-optimal radii for fixed centres, fast exact KKT-Newton active-set polish on the
+contact graph for every candidate, SLSQP polish on new bests, minimal-loss final strict shrink, and a second hopping
+phase that reclaims the tail of the time budget after the final polish.
 Independent chains run in worker processes (one per available core) and exchange elites through atomic JSON files.
 Interface: python solver.py --n N --time SECONDS --seed S --out PATH
 """
@@ -933,6 +935,55 @@ def op_cross(c, r, rng, n, ctx):
     return _clip(c2), r2, (1e2, 1e3, 1e4, 1e5)
 
 
+def op_migrate(mode):
+    """Defect migration with an intermediate relaxation.
+    mode 0 (remove-relax-refill): take out the weakest circle(s), let the remaining packing re-equilibrate (the
+      vacancy smears out and the largest hole moves), then re-insert them into the new largest holes.
+    mode 1 (insert-relax-evict): push an extra circle into the largest hole, relax the n+1 packing under that
+      pressure, then evict the weakest ORIGINAL circle, so a defect migrates from the weakest site to the hole.
+    Plain remove-and-refill (without relaxation) refills the very hole the circle just left and lands back in the
+    same basin; the intermediate relaxation is what makes these moves structural."""
+
+    def f(c, r, rng, n, ctx):
+        if n < 4:
+            return op_subset(c, r, rng, n, ctx)
+        dl = ctx.get("deadline", time.time() + 1.0)
+        rbar = max(float(r.mean()), 1e-6)
+        if mode == 0:
+            k = int(rng.integers(1, 3))
+            if rng.random() < 0.7:
+                idx = np.argsort(r + rng.normal(0, 0.15 * rbar, n))[:k]
+            else:
+                idx = rng.choice(n, k, replace=False)
+            keep = np.ones(n, bool)
+            keep[idx] = False
+            ck, rk = run_penalty(c[keep], r[keep], n - k, (1e3, 1e4), 60, dl)
+            cs, rs = fill_holes(ck, rk, k, rng, samples=4000)
+            c2, r2 = c.copy(), r.copy()
+            c2[keep] = ck
+            r2[keep] = rk
+            c2[idx] = cs
+            r2[idx] = 0.9 * rs
+            return _clip(c2), r2, (1e3, 1e4, 1e5)
+        cs, rs = fill_holes(c, r, 1, rng, samples=4000)
+        rnew = max(0.9 * float(rs[0]), rng.uniform(0.4, 0.8) * rbar)
+        c1 = np.concatenate([c, cs])
+        r1 = np.concatenate([r, [rnew]])
+        c1, r1 = run_penalty(c1, r1, n + 1, (1e2, 1e3, 1e4), 60, dl)
+        if rng.random() < 0.75:
+            j = int(np.argmin(r1[:n] + rng.normal(0, 0.15 * rbar, n)))
+        else:
+            j = int(np.argmin(r1 + rng.normal(0, 0.15 * rbar, n + 1)))
+        c2 = c1[:n].copy()
+        r2 = r1[:n].copy()
+        if j < n:
+            c2[j] = c1[n]
+            r2[j] = r1[n]
+        return _clip(c2), r2, (1e3, 1e4, 1e5)
+
+    return f
+
+
 OPS = [
     op_jitter(0.05),
     op_jitter(0.15),
@@ -947,6 +998,8 @@ OPS = [
     op_cross,
     op_slip(1),
     op_slip(2),
+    op_migrate(0),
+    op_migrate(1),
 ]
 
 
@@ -970,7 +1023,8 @@ def solve(n, budget, seed, out, t0=None, peers=()):
     reserve = min(5.0, max(0.5, 0.05 * budget))
     end = t0 + budget - reserve
     p1_end = t0 + 0.25 * budget
-    p2_end = t0 + 0.82 * budget - reserve
+    p2_end = t0 + 0.80 * budget - reserve
+    p4_end = end - max(0.3, 0.02 * budget)
     best = trivial(n)
     save(out, n, best)
     if n == 1:
@@ -1039,79 +1093,98 @@ def solve(n, budget, seed, out, t0=None, peers=()):
     add_pool(best)
     exchange(True)
 
-    # Phase 2: basin hopping on the incumbent with adaptive operator selection; Newton-exact candidate comparison
+    # Phase 2 / 4: basin hopping on the incumbent with adaptive operator selection; Newton-exact comparison
     cur = best
     stall = 0
     last_polish = time.time()
     W = np.ones(len(OPS))
     nt_time = 0.0
-    p2_start = time.time()
-    while time.time() < p2_end and cur["s"] > 0:
-        exchange()
-        p = (0.1 + W) / (0.1 + W).sum()
-        k = int(rng.choice(len(OPS), p=p))
-        ctx = {"pool": pool, "cur_s": cur["s"]}
-        try:
-            c, r, mus = OPS[k](cur["c"], cur["r"], rng, n, ctx)
-            if len(c) != n or len(r) != n:
-                continue
-        except Exception:
-            continue
-        c, r = run_penalty(c, r, n, mus, 200, end)
-        cand = evaluate(c, lp_radii(c, r))
-        now = time.time()
-        if cand["s"] > 0 and now < p2_end:
-            rbar = max(float(cur["r"].mean()), 1e-6)
-            same = len(cand["c"]) == len(cur["c"]) and float(np.abs(cand["c"] - cur["c"]).max()) < 0.02 * rbar
-            near = cand["s"] > cur["s"] - 3e-3
-            budget_ok = nt_time < 0.5 * (now - p2_start) + 1.0
-            if not same and (cand["s"] > cur["s"] - 5e-4 or (near and budget_ok)):
-                tq = time.time()
-                q = newton_polish(cand["c"], cand["r"], n, min(p2_end, tq + 0.02 * budget))
-                nt_time += time.time() - tq
-                if q["s"] > cand["s"]:
-                    cand = q
-        prog = (time.time() - t0) / max(budget, 1e-9)
-        T = 3e-4 * max(0.0, 1 - prog)
-        reward = 0.0
-        if cand["s"] > 0 and cand["s"] > cur["s"]:
-            reward = 0.3
-        if cand["s"] > 0 and cand["s"] > cur["s"] - T * rng.exponential():
-            cur = cand
-        add_pool(cand)
-        if cand["s"] > best["s"]:
-            reward = 1.0
-            best = cand
-            cur = best
-            stall = 0
-            save(out, n, best)
-            if time.time() < p2_end:
-                use_slsqp = n <= 60 or time.time() - last_polish > 0.15 * budget
-                if use_slsqp:
-                    last_polish = time.time()
-                pol = full_polish(best, n, min(p2_end, time.time() + 0.1 * budget), budget, slsqp=use_slsqp)
-                if pol["s"] > best["s"]:
-                    best = pol
-                    cur = best
-                    save(out, n, best)
-                    add_pool(best)
-        else:
-            stall += 1
-            if stall > 30:
-                stall = 0
-                exchange(True)
-                if pool:
-                    idx = min(int(rng.exponential(0.8)), len(pool) - 1)
-                    cur = pool[idx]
-                else:
-                    cur = best
-        W[k] = 0.9 * W[k] + 0.1 * reward
+    hop_t0 = time.time()
 
-    # Phase 3: final polish of the best basin
+    def hop_phase(until, slsqp_ok):
+        nonlocal best, cur, stall, last_polish, nt_time
+        while time.time() < until and cur["s"] > 0:
+            exchange()
+            p = (0.1 + W) / (0.1 + W).sum()
+            k = int(rng.choice(len(OPS), p=p))
+            ctx = {"pool": pool, "cur_s": cur["s"], "deadline": until}
+            try:
+                c, r, mus = OPS[k](cur["c"], cur["r"], rng, n, ctx)
+                if len(c) != n or len(r) != n:
+                    continue
+            except Exception:
+                continue
+            c, r = run_penalty(c, r, n, mus, 200, until)
+            cand = evaluate(c, lp_radii(c, r))
+            now = time.time()
+            if cand["s"] > 0 and now < until:
+                rbar = max(float(cur["r"].mean()), 1e-6)
+                same = len(cand["c"]) == len(cur["c"]) and float(np.abs(cand["c"] - cur["c"]).max()) < 0.02 * rbar
+                near = cand["s"] > cur["s"] - 3e-3
+                budget_ok = nt_time < 0.5 * (now - hop_t0) + 1.0
+                if not same and (cand["s"] > cur["s"] - 5e-4 or (near and budget_ok)):
+                    tq = time.time()
+                    q = newton_polish(cand["c"], cand["r"], n, min(until, tq + 0.02 * budget))
+                    nt_time += time.time() - tq
+                    if q["s"] > cand["s"]:
+                        cand = q
+            prog = (time.time() - t0) / max(budget, 1e-9)
+            T = 3e-4 * max(0.0, 1 - prog)
+            reward = 0.0
+            if cand["s"] > 0 and cand["s"] > cur["s"]:
+                reward = 0.3
+            if cand["s"] > 0 and cand["s"] > cur["s"] - T * rng.exponential():
+                cur = cand
+            add_pool(cand)
+            if cand["s"] > best["s"]:
+                reward = 1.0
+                best = cand
+                cur = best
+                stall = 0
+                save(out, n, best)
+                if time.time() < until:
+                    use_slsqp = slsqp_ok and (n <= 60 or time.time() - last_polish > 0.15 * budget)
+                    if use_slsqp:
+                        last_polish = time.time()
+                    pol = full_polish(best, n, min(until, time.time() + 0.1 * budget), budget, slsqp=use_slsqp)
+                    if pol["s"] > best["s"]:
+                        best = pol
+                        cur = best
+                        save(out, n, best)
+                        add_pool(best)
+            else:
+                stall += 1
+                if stall > 30:
+                    stall = 0
+                    exchange(True)
+                    if pool:
+                        idx = min(int(rng.exponential(0.8)), len(pool) - 1)
+                        cur = pool[idx]
+                    else:
+                        cur = best
+            W[k] = 0.9 * W[k] + 0.1 * reward
+
+    hop_phase(p2_end, True)
+
+    # Phase 3: full polish of the best basin
     if time.time() < end and best["s"] > 0:
-        pol = full_polish(best, n, end, budget)
+        pol = full_polish(best, n, min(end, time.time() + 0.1 * budget), budget)
         if pol["s"] > best["s"]:
             best = pol
+            save(out, n, best)
+            add_pool(best)
+
+    # Phase 4: reclaim the remaining time with more (Newton-only) hops, then a final exact finish
+    cur = best
+    stall = 0
+    try:
+        hop_phase(p4_end, False)
+    except Exception:
+        pass
+    if time.time() < end and best["s"] > 0:
+        q = newton_polish(best["c"], best["r"], n, end)
+        if q["s"] > best["s"]:
+            best = q
             save(out, n, best)
     return best
 
