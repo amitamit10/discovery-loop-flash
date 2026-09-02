@@ -1,4 +1,5 @@
 """Island-model basin-hopping solver for csqv: hex-lattice template inits (incl. under-full lattice + strip fill),
+affine-lattice template bank (rotated / sheared / anisotropic hex lattices sized by bisection to hold exactly n sites),
 sparse-neighbour penalty L-BFGS-B, adaptive move selection incl. half-plane crossover with elite pool, LP-optimal
 radii for fixed centres, SLSQP active-set polish on the contact graph, final strict shrink. Independent chains run in
 worker processes (one per available core) and exchange elites through atomic JSON files.
@@ -382,18 +383,153 @@ def hex_lattice(n, rng):
     return c, rad
 
 
-def init(n, rng):
+# ---- affine lattice template bank: rotated / sheared / anisotropic hex lattices with exactly (or under) n sites
+def _lattice_pts(ua, ub, s, off, cap=6000):
+    """All sites off + i*s*ua + j*s*ub whose circle of radius r (half the shortest lattice vector) fits in the square."""
+    a = s * ua
+    b = s * ub
+    dmin = s * min(
+        math.hypot(ua[0], ua[1]),
+        math.hypot(ub[0], ub[1]),
+        math.hypot(ua[0] - ub[0], ua[1] - ub[1]),
+        math.hypot(ua[0] + ub[0], ua[1] + ub[1]),
+    )
+    r = 0.5 * dmin
+    if r >= 0.5 or r <= 1e-4:
+        return np.zeros((0, 2)), r
+    M = np.array([a, b]).T
+    det = M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
+    if abs(det) < 1e-12:
+        return None, r
+    Minv = np.array([[M[1, 1], -M[0, 1]], [-M[1, 0], M[0, 0]]]) / det
+    corners = np.array([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]) - off
+    ij = corners @ Minv.T
+    i0 = int(math.floor(ij[:, 0].min())) - 1
+    i1 = int(math.ceil(ij[:, 0].max())) + 1
+    j0 = int(math.floor(ij[:, 1].min())) - 1
+    j1 = int(math.ceil(ij[:, 1].max())) + 1
+    if (i1 - i0 + 1) * (j1 - j0 + 1) > cap:
+        return None, r
+    I, J = np.meshgrid(np.arange(i0, i1 + 1), np.arange(j0, j1 + 1), indexing="ij")
+    P = off + I.ravel()[:, None] * a + J.ravel()[:, None] * b
+    m = (P[:, 0] >= r) & (P[:, 0] <= 1 - r) & (P[:, 1] >= r) & (P[:, 1] <= 1 - r)
+    return P[m], r
+
+
+def build_lattice_bank(n, rng, samples, deadline, keep=40):
+    """Sample lattice families, size each by bisection on the scale so it holds >= target sites, rank by radius."""
+    bank = []
+    lo_cnt = max(2, n - int(0.15 * n))
+    for _ in range(samples):
+        if time.time() > deadline:
+            break
+        try:
+            if rng.random() < 0.3:
+                th = (0.0 if rng.random() < 0.5 else math.pi / 6) + rng.normal(0, 0.01)
+            else:
+                th = rng.uniform(0, math.pi / 3)
+            phi = math.pi / 3 + rng.normal(0, 0.08)
+            ratio = 1.0 + rng.normal(0, 0.04)
+            ua = np.array([math.cos(th), math.sin(th)])
+            ub = ratio * np.array([math.cos(th + phi), math.sin(th + phi)])
+            off = rng.random(2)
+            if rng.random() < 0.7:
+                target = n
+            else:
+                target = n - int(rng.integers(1, max(2, int(0.12 * n)) + 1))
+            det = abs(ua[0] * ub[1] - ua[1] * ub[0])
+            if det < 0.3:
+                continue
+            s0 = math.sqrt(1.0 / (target * det))
+            lo, hi = 0.7 * s0, 1.3 * s0
+            ok = False
+            for _k in range(8):
+                P, r = _lattice_pts(ua, ub, lo, off)
+                if P is not None and len(P) >= target:
+                    ok = True
+                    break
+                lo *= 0.8
+            if not ok:
+                continue
+            for _k in range(8):
+                P, r = _lattice_pts(ua, ub, hi, off)
+                if P is None or len(P) < target:
+                    break
+                hi *= 1.25
+            for _k in range(24):
+                mid = 0.5 * (lo + hi)
+                P, r = _lattice_pts(ua, ub, mid, off)
+                if P is not None and len(P) >= target:
+                    lo = mid
+                else:
+                    hi = mid
+            P, r = _lattice_pts(ua, ub, lo, off)
+            if P is None:
+                continue
+            cnt = len(P)
+            if cnt < lo_cnt or cnt > n + max(3, int(0.3 * n)):
+                continue
+            if cnt >= 2:
+                D = np.sqrt(((P[:, None, :] - P[None, :, :]) ** 2).sum(-1))
+                np.fill_diagonal(D, np.inf)
+                r = min(r, 0.5 * float(D.min()))
+            if r <= 1e-4:
+                continue
+            score = r * min(cnt, n) + 0.35 * r * max(0, n - cnt)
+            bank.append((score, P.copy(), r))
+        except Exception:
+            continue
+    bank.sort(key=lambda t: -t[0])
+    return bank[:keep]
+
+
+def affine_init(n, rng, bank):
+    if not bank:
+        return None
+    idx = min(int(rng.exponential(6.0)), len(bank) - 1)
+    _, P, r = bank[idx]
+    P = P.copy()
+    cnt = len(P)
+    rad = np.full(cnt, r)
+    if cnt > n:
+        if rng.random() < 0.5:
+            keep = rng.permutation(cnt)[:n]
+        else:
+            wall = np.minimum(np.minimum(P[:, 0], 1 - P[:, 0]), np.minimum(P[:, 1], 1 - P[:, 1]))
+            key = wall + rng.normal(0, 0.7 * r, cnt)
+            keep = np.argsort(-key)[:n]
+        P = P[keep]
+        rad = rad[keep]
+    elif cnt < n:
+        cs, rs = fill_holes(P, rad, n - cnt, rng, samples=4000)
+        P = np.concatenate([P, cs])
+        rad = np.concatenate([rad, 0.9 * rs])
+    if len(P) != n:
+        return None
+    c = np.clip(P + rng.normal(0, 0.1 * r, P.shape), 0.02, 0.98)
+    rad = rad * rng.uniform(0.85, 1.0, n)
+    return c, rad
+
+
+def init(n, rng, ictx=None):
     u = rng.random()
-    if u < 0.5 and n >= 6:
+    if n >= 6 and u < 0.7:
         h = None
         try:
-            h = hex_lattice(n, rng)
+            if u < 0.3 or ictx is None:
+                h = hex_lattice(n, rng)
+            else:
+                if ictx.get("bank") is None:
+                    ictx["bank"] = build_lattice_bank(n, rng, ictx.get("samples", 120), ictx.get("bank_deadline", time.time() + 2.0))
+                h = affine_init(n, rng, ictx["bank"])
+                if h is None:
+                    h = hex_lattice(n, rng)
         except Exception:
             h = None
         if h is not None:
             return h
         u = 0.9
-    if u < 0.7:
+    if u < 0.85:
         c = rng.random((n, 2))
     else:
         k = math.ceil(math.sqrt(n))
@@ -592,13 +728,20 @@ def solve(n, budget, seed, out, t0=None, peers=()):
             if cand is not None:
                 add_pool(cand)
 
-    # Phase 1: cold multi-start (hex / hex+strip / square / random templates)
+    # lattice template bank context (built lazily on first affine init, time-capped)
+    ictx = {
+        "bank": None,
+        "samples": int(min(300, max(60, 4 * budget))),
+        "bank_deadline": min(t0 + max(0.5, 0.03 * budget), end),
+    }
+
+    # Phase 1: cold multi-start (hex / hex+strip / affine-lattice bank / square / random templates)
     starts = 0
     while time.time() < p1_end or starts < 2:
         if time.time() > end:
             break
         try:
-            c, r = init(n, rng)
+            c, r = init(n, rng, ictx)
         except Exception:
             c, r = rng.random((n, 2)), np.full(n, 0.4 / math.sqrt(n))
         c, r = run_penalty(c, r, n, (10, 100, 1e3, 1e4, 1e5), 300, end)
