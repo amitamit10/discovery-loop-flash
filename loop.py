@@ -254,6 +254,11 @@ def main():
     )
     ap.add_argument("--eval-only", action="store_true")
     ap.add_argument("--refresh-records", action="store_true")
+    ap.add_argument(
+        "--no-publish",
+        action="store_true",
+        help="never fire publish.py (no git commit/push, no maintainer email); for isolated experiments",
+    )
     a = ap.parse_args()
     deadline = time.time() + 60 * a.wall_minutes if a.wall_minutes else None
     L = Loop(a.problem)
@@ -290,7 +295,7 @@ def main():
             }
         )
         print(f"[iter {it}] seed total={total:.4f} wins={wins} improved={improved}")
-        if set(wins) & set(improved):
+        if not a.no_publish and set(wins) & set(improved):
             L.publish()
         it += 1
         if a.eval_only:
@@ -382,7 +387,7 @@ def main():
         print(
             f"[iter {it}] {status} total={total:.4f} champ={champ_total:.4f} cost=${cost_total:.2f} wins={wins} improved={improved} | {idea}"
         )
-        if set(wins) & set(improved):
+        if not a.no_publish and set(wins) & set(improved):
             L.publish()
         it += 1
         if check_plateau(a.plateau_window, a.plateau_threshold):
@@ -394,7 +399,8 @@ def main():
             break
     else:
         print(f"done. champion total={champ_total:.4f} spend=${cost_total:.2f}")
-    L.publish()
+    if not a.no_publish:
+        L.publish()
 
 
 if __name__ == "__main__":
