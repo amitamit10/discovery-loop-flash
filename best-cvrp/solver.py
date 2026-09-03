@@ -1,18 +1,23 @@
-"""Seed CVRP solver: Clarke-Wright parallel savings, then local search, within a wall-clock budget.
+"""CVRP solver: Clarke-Wright start, granular local search, then string ruin & recreate with SA acceptance.
 
-Phase 1: Clarke-Wright savings builds a feasible set of routes (each customer served once, capacity
-respected) and it is written to disk immediately, so a timeout always leaves a feasible solution.
-Phase 2: local search improves it until the deadline -- 2-opt inside each route, plus relocate and swap
-moves between routes, both capacity-checked. Every improvement is saved atomically.
+Phase 1: parallel Clarke-Wright savings -> feasible routes, written to disk immediately.
+Phase 2: granular local search (each customer only paired with its K nearest neighbours) with
+         relocate / Or-opt (1-3 customers, optionally reversed), swap, intra-route 2-opt and
+         inter-route 2-opt*; every move is capacity checked.
+Phase 3: until the deadline, SISR-style ruin (remove adjacent strings around a random seed customer)
+         + greedy cheapest insertion with blinks + local search on the touched customers, accepted with
+         simulated annealing; the best solution is saved atomically on every improvement.
 
-    python seed_solver.py --target X-n280-k17 --time 120 --seed 1 --out sol.json
-writes {"target", "obj", "solution": {"routes": [[customer, ...], ...]}} (customer numbers 1..DIMENSION-1).
-Pure python + numpy, no external solver.
+    python solver.py --target X-n280-k17 --time 120 --seed 1 --out sol.json
+Pure python + numpy.
 """
 
 import argparse
+import bisect
 import json
+import math
 import os
+import random
 import sys
 import time
 
@@ -25,8 +30,8 @@ from verify import dist_matrix, load_instance  # noqa: E402
 def clarke_wright(D, demand, cap):
     """Parallel savings. Returns a list of routes (lists of customer node indices 1..n)."""
     n = len(demand) - 1
-    routes = {i: [i] for i in range(1, n + 1)}  # route id == its initial customer
-    where = {i: i for i in range(1, n + 1)}  # customer -> route id
+    routes = {i: [i] for i in range(1, n + 1)}
+    where = {i: i for i in range(1, n + 1)}
     load = {i: float(demand[i]) for i in range(1, n + 1)}
     cust = np.arange(1, n + 1)
     i, j = np.meshgrid(cust, cust, indexing="ij")
@@ -41,9 +46,9 @@ def clarke_wright(D, demand, cap):
         Ra, Rb = routes[ra], routes[rb]
         if a not in (Ra[0], Ra[-1]) or b not in (Rb[0], Rb[-1]):
             continue
-        if Ra[-1] != a:  # want a at the tail of Ra
+        if Ra[-1] != a:
             Ra.reverse()
-        if Rb[0] != b:  # want b at the head of Rb
+        if Rb[0] != b:
             Rb.reverse()
         merged = Ra + Rb
         for c in Rb:
@@ -54,130 +59,396 @@ def clarke_wright(D, demand, cap):
     return list(routes.values())
 
 
-def two_opt(route, D, deadline):
-    """In-route 2-opt over depot(0)-...-depot(0); reverses segments while it lowers the route cost."""
-    path = [0, *route, 0]
-    improved = True
-    while improved and time.time() < deadline:
-        improved = False
-        for i in range(1, len(path) - 2):
-            a, b = path[i - 1], path[i]
-            for k in range(i + 1, len(path) - 1):
-                c, d = path[k], path[k + 1]
-                if a == c:
+class CVRP:
+    def __init__(self, Dn, demand, cap, rng, K=15, Kruin=50):
+        self.Dn = Dn
+        self.D = Dn.tolist()
+        self.n = len(demand) - 1
+        self.dem = [int(x) if float(x).is_integer() else float(x) for x in demand]
+        self.cap = int(cap) if float(cap).is_integer() else float(cap)
+        self.rng = rng
+        n = self.n
+        order = np.argsort(Dn[1:, 1:], axis=1, kind="stable")
+        self.nb = [None] * (n + 1)
+        self.nbr = [None] * (n + 1)
+        for c in range(1, n + 1):
+            row = [int(x) + 1 for x in order[c - 1].tolist() if int(x) + 1 != c]
+            self.nb[c] = row[:K]
+            self.nbr[c] = row[:Kruin]
+        self.D0 = self.D[0]
+
+    # ------------------------------------------------------------------ utilities
+    def route_cost(self, R):
+        if not R:
+            return 0
+        D = self.D
+        s = D[0][R[0]] + D[R[-1]][0]
+        for k in range(len(R) - 1):
+            s += D[R[k]][R[k + 1]]
+        return s
+
+    def total_cost(self, routes):
+        return sum(self.route_cost(R) for R in routes)
+
+    def compact(self, routes):
+        routes = [R[:] for R in routes if R]
+        rid = [-1] * (self.n + 1)
+        load = []
+        dem = self.dem
+        for r, R in enumerate(routes):
+            for x in R:
+                rid[x] = r
+            load.append(sum(dem[x] for x in R))
+        return routes, rid, load
+
+    # ------------------------------------------------------------------ local search
+    def _set2(self, routes, rid, load, rc, rv, A, B):
+        dem = self.dem
+        routes[rc] = A
+        routes[rv] = B
+        for x in A:
+            rid[x] = rc
+        for x in B:
+            rid[x] = rv
+        load[rc] = sum(dem[x] for x in A)
+        load[rv] = sum(dem[x] for x in B)
+
+    def _improve(self, c, v, routes, rid, load):
+        D = self.D
+        dem = self.dem
+        cap = self.cap
+        rc = rid[c]
+        rv = rid[v]
+        Rc = routes[rc]
+        Rv = routes[rv]
+        i = Rc.index(c)
+        j = Rv.index(v)
+        lc = len(Rc)
+        lv = len(Rv)
+        pc = Rc[i - 1] if i else 0
+        nc = Rc[i + 1] if i + 1 < lc else 0
+        pv = Rv[j - 1] if j else 0
+        nv = Rv[j + 1] if j + 1 < lv else 0
+        Dc = D[c]
+        Dv = D[v]
+        Dpc = D[pc]
+        Dpv = D[pv]
+        dc = dem[c]
+        dv = dem[v]
+        same = rc == rv
+
+        # ---- swap c <-> v
+        if same:
+            if j == i + 1:
+                delta = Dpc[v] + Dc[nv] - Dpc[c] - Dv[nv]
+            elif i == j + 1:
+                delta = Dpv[c] + Dv[nc] - Dpv[v] - Dc[nc]
+            else:
+                delta = Dpc[v] + Dv[nc] + Dpv[c] + Dc[nv] - Dpc[c] - Dc[nc] - Dpv[v] - Dv[nv]
+            if delta < 0:
+                Rc[i] = v
+                Rc[j] = c
+                return True
+        elif load[rc] - dc + dv <= cap and load[rv] - dv + dc <= cap:
+            delta = Dpc[v] + Dv[nc] + Dpv[c] + Dc[nv] - Dpc[c] - Dc[nc] - Dpv[v] - Dv[nv]
+            if delta < 0:
+                Rc[i] = v
+                Rv[j] = c
+                rid[c] = rv
+                rid[v] = rc
+                load[rc] += dv - dc
+                load[rv] += dc - dv
+                return True
+
+        # ---- 2-opt (same route) / 2-opt* (different routes)
+        if same:
+            if i < j:
+                if Dc[v] + D[nc][nv] - Dc[nc] - Dv[nv] < 0:
+                    Rc[i + 1 : j + 1] = Rc[i + 1 : j + 1][::-1]
+                    return True
+                if Dpc[pv] + Dc[v] - Dpc[c] - Dpv[v] < 0:
+                    Rc[i:j] = Rc[i:j][::-1]
+                    return True
+            else:
+                if Dv[c] + D[nv][nc] - Dv[nv] - Dc[nc] < 0:
+                    Rc[j + 1 : i + 1] = Rc[j + 1 : i + 1][::-1]
+                    return True
+                if Dpv[pc] + Dv[c] - Dpv[v] - Dpc[c] < 0:
+                    Rc[j:i] = Rc[j:i][::-1]
+                    return True
+        else:
+            d1 = Dc[nv] + Dv[nc] - Dc[nc] - Dv[nv]
+            d2 = Dpc[pv] + Dc[v] - Dpc[c] - Dpv[v]
+            d3 = Dc[v] + Dpv[nc] - Dc[nc] - Dpv[v]
+            d4 = Dv[c] + Dpc[nv] - Dpc[c] - Dv[nv]
+            if d1 < 0 or d2 < 0 or d3 < 0 or d4 < 0:
+                prec = 0
+                for x in Rc[: i + 1]:
+                    prec += dem[x]
+                prev = 0
+                for x in Rv[: j + 1]:
+                    prev += dem[x]
+                Lc = load[rc]
+                Lv = load[rv]
+                if d1 < 0 and prec + Lv - prev <= cap and prev + Lc - prec <= cap:
+                    self._set2(routes, rid, load, rc, rv, Rc[: i + 1] + Rv[j + 1 :], Rv[: j + 1] + Rc[i + 1 :])
+                    return True
+                if d2 < 0 and prec - dc + prev - dv <= cap and Lc - prec + dc + Lv - prev + dv <= cap:
+                    self._set2(routes, rid, load, rc, rv, Rc[:i] + Rv[:j][::-1], Rc[i:][::-1] + Rv[j:])
+                    return True
+                if d3 < 0 and prec + Lv - prev + dv <= cap and prev - dv + Lc - prec <= cap:
+                    self._set2(routes, rid, load, rc, rv, Rc[: i + 1] + Rv[j:], Rv[:j] + Rc[i + 1 :])
+                    return True
+                if d4 < 0 and prev + Lc - prec + dc <= cap and prec - dc + Lv - prev <= cap:
+                    self._set2(routes, rid, load, rc, rv, Rv[: j + 1] + Rc[i:], Rc[:i] + Rv[j + 1 :])
+                    return True
+
+        # ---- Or-opt / relocate: move a segment containing c next to v
+        segs = [(i, i + 1)]
+        if i + 2 <= lc:
+            segs.append((i, i + 2))
+        if i + 3 <= lc:
+            segs.append((i, i + 3))
+        if i >= 1:
+            segs.append((i - 1, i + 1))
+        if i >= 2:
+            segs.append((i - 2, i + 1))
+        Lv_load = load[rv]
+        for s, e in segs:
+            L = e - s
+            a = Rc[s]
+            b = Rc[e - 1]
+            p = Rc[s - 1] if s else 0
+            q = Rc[e] if e < lc else 0
+            gain = D[p][a] + D[b][q] - D[p][q]
+            if gain <= 0:
+                continue
+            if same:
+                if s <= j < e:
                     continue
-                if D[a, path[k]] + D[b, d] < D[a, b] + D[c, d]:
-                    path[i : k + 1] = path[i : k + 1][::-1]
-                    improved = True
-                    a, b = path[i - 1], path[i]
-    return path[1:-1]
+                ca = j != s - 1
+                cb = j != e
+                sd = 0
+            else:
+                sd = dc if L == 1 else sum(dem[x] for x in Rc[s:e])
+                if Lv_load + sd > cap:
+                    continue
+                ca = cb = True
+            Da = D[a]
+            Db = D[b]
+            mv = None
+            if ca:
+                base = Dv[nv] + gain
+                if Dv[a] + Db[nv] < base:
+                    mv = (True, False)
+                elif L > 1 and Dv[b] + Da[nv] < base:
+                    mv = (True, True)
+            if mv is None and cb:
+                base = Dpv[v] + gain
+                if Dpv[a] + Db[v] < base:
+                    mv = (False, False)
+                elif L > 1 and Dpv[b] + Da[v] < base:
+                    mv = (False, True)
+            if mv is not None:
+                after, rev = mv
+                seg = Rc[s:e]
+                del Rc[s:e]
+                piece = seg[::-1] if rev else seg
+                k = Rc.index(v) if same else j
+                ins = k + 1 if after else k
+                Rv[ins:ins] = piece
+                if not same:
+                    for x in seg:
+                        rid[x] = rv
+                    load[rc] -= sd
+                    load[rv] += sd
+                return True
+        return False
 
-
-def local_search(routes, D, demand, cap, deadline, save):
-    """Relocate + swap between routes and 2-opt within routes until no improvement or the deadline."""
-    load = [float(demand[r].sum()) for r in routes]
-
-    def cost():
-        return sum(_route_cost(r, D) for r in routes)
-
-    best = cost()
-    changed = True
-    while changed and time.time() < deadline:
-        changed = False
-        # relocate: move one customer to the best feasible position in another route
-        for ai in range(len(routes)):
-            if time.time() >= deadline:
+    def local_search(self, routes, rid, load, pending, deadline):
+        nb = self.nb
+        improve = self._improve
+        stack = list(pending)
+        self.rng.shuffle(stack)
+        inq = set(stack)
+        tcheck = 0
+        while stack:
+            tcheck += 1
+            if (tcheck & 31) == 0 and time.time() > deadline:
                 break
-            A = routes[ai]
-            for pos in range(len(A)):
-                c = A[pos]
-                prev = A[pos - 1] if pos > 0 else 0
-                nxt = A[pos + 1] if pos + 1 < len(A) else 0
-                gain = D[prev, c] + D[c, nxt] - D[prev, nxt]
-                dc = float(demand[c])
-                for bi in range(len(routes)):
-                    if bi == ai:
-                        continue
-                    if load[bi] + dc > cap:
-                        continue
-                    B = routes[bi]
-                    aug = [0, *B, 0]
-                    bestpos, bestdelta = None, -1e-9
-                    for u in range(len(aug) - 1):
-                        add = D[aug[u], c] + D[c, aug[u + 1]] - D[aug[u], aug[u + 1]]
-                        if add - gain < bestdelta:
-                            bestdelta, bestpos = add - gain, u
-                    if bestpos is not None:
-                        A.pop(pos)
-                        B.insert(bestpos, c)
-                        load[ai] -= dc
-                        load[bi] += dc
-                        changed = True
-                        break
-                if changed:
-                    break
-            if changed:
-                break
-        if changed:
-            routes[:] = [r for r in routes if r]
-            load = [float(demand[r].sum()) for r in routes]
-            cur = cost()
-            if cur < best:
-                best = cur
-                save(routes, best)
-            continue
-        # swap: exchange two customers between different routes
-        for ai in range(len(routes)):
-            if time.time() >= deadline:
-                break
-            A = routes[ai]
-            for pa in range(len(A)):
-                ca = A[pa]
-                pra, nxa = (A[pa - 1] if pa > 0 else 0), (A[pa + 1] if pa + 1 < len(A) else 0)
-                for bi in range(ai + 1, len(routes)):
-                    B = routes[bi]
-                    for pb in range(len(B)):
-                        cb = B[pb]
-                        da, db = float(demand[ca]), float(demand[cb])
-                        if load[ai] - da + db > cap or load[bi] - db + da > cap:
-                            continue
-                        prb, nxb = (B[pb - 1] if pb > 0 else 0), (B[pb + 1] if pb + 1 < len(B) else 0)
-                        before = D[pra, ca] + D[ca, nxa] + D[prb, cb] + D[cb, nxb]
-                        after = D[pra, cb] + D[cb, nxa] + D[prb, ca] + D[ca, nxb]
-                        if after < before - 1e-9:
-                            A[pa], B[pb] = cb, ca
-                            load[ai] += db - da
-                            load[bi] += da - db
-                            changed = True
-                            break
-                    if changed:
-                        break
-                if changed:
-                    break
-            if changed:
-                break
-        if changed:
-            cur = cost()
-            if cur < best:
-                best = cur
-                save(routes, best)
-            continue
-        # no inter-route move helped: polish each route with 2-opt, save if it lowered the total
-        for idx in range(len(routes)):
-            routes[idx] = two_opt(routes[idx], D, deadline)
-        cur = cost()
-        if cur < best - 1e-9:
-            best = cur
-            save(routes, best)
-            changed = True
-    return routes, best
+            c = stack.pop()
+            inq.discard(c)
+            if rid[c] < 0:
+                continue
+            for v in nb[c]:
+                rc = rid[c]
+                rv = rid[v]
+                if improve(c, v, routes, rid, load):
+                    for x in routes[rc]:
+                        if x not in inq:
+                            inq.add(x)
+                            stack.append(x)
+                    if rv != rc:
+                        for x in routes[rv]:
+                            if x not in inq:
+                                inq.add(x)
+                                stack.append(x)
 
+    # ------------------------------------------------------------------ ruin & recreate
+    def ruin(self, routes, rid, load, cbar):
+        rng = self.rng
+        dem = self.dem
+        removed = []
+        cuts = []
+        if rng.random() < 0.15:
+            m = max(1, min(self.n - 1, int(cbar)))
+            for x in rng.sample(range(1, self.n + 1), m):
+                r = rid[x]
+                R = routes[r]
+                k = R.index(x)
+                del R[k]
+                if k > 0:
+                    cuts.append(R[k - 1])
+                if k < len(R):
+                    cuts.append(R[k])
+                rid[x] = -1
+                load[r] -= dem[x]
+                removed.append(x)
+            return removed, cuts
+        nr = sum(1 for R in routes if R)
+        avg = self.n / max(1, nr)
+        Lmax = max(1.0, min(10.0, avg))
+        kmax = max(1, int(4.0 * cbar / (1.0 + Lmax) - 1.0))
+        ks = rng.randint(1, kmax)
+        seed = rng.randint(1, self.n)
+        ruined = set()
+        for v in [seed] + self.nbr[seed]:
+            if len(ruined) >= ks:
+                break
+            r = rid[v]
+            if r < 0 or r in ruined:
+                continue
+            R = routes[r]
+            lr = len(R)
+            l = rng.randint(1, int(min(Lmax, lr)))
+            j = R.index(v)
+            lo = max(0, j - l + 1)
+            hi = min(j, lr - l)
+            start = rng.randint(lo, hi)
+            seg = R[start : start + l]
+            del R[start : start + l]
+            if start > 0:
+                cuts.append(R[start - 1])
+            if start < len(R):
+                cuts.append(R[start])
+            for x in seg:
+                rid[x] = -1
+                load[r] -= dem[x]
+            removed.extend(seg)
+            ruined.add(r)
+        return removed, cuts
 
-def _route_cost(route, D):
-    if not route:
-        return 0
-    path = [0, *route, 0]
-    return int(sum(D[path[i], path[i + 1]] for i in range(len(path) - 1)))
+    def recreate(self, routes, rid, load, removed):
+        Dn = self.Dn
+        dem = self.dem
+        cap = self.cap
+        rng = self.rng
+        D0 = self.D0
+        mode = rng.random()
+        if mode < 0.4:
+            rng.shuffle(removed)
+        elif mode < 0.7:
+            removed.sort(key=lambda x: -dem[x])
+        elif mode < 0.85:
+            removed.sort(key=lambda x: -D0[x])
+        else:
+            removed.sort(key=lambda x: D0[x])
+        blink = rng.random() < 0.5
+        for c in removed:
+            dc = dem[c]
+            P = []
+            N = []
+            starts = []
+            rids = []
+            for r, R in enumerate(routes):
+                if load[r] + dc > cap:
+                    continue
+                starts.append(len(P))
+                rids.append(r)
+                P.append(0)
+                P.extend(R)
+                N.extend(R)
+                N.append(0)
+            if not P:
+                routes.append([c])
+                rid[c] = len(routes) - 1
+                load.append(dc)
+                continue
+            Pa = np.array(P)
+            Na = np.array(N)
+            adds = Dn[c, Pa] + Dn[c, Na] - Dn[Pa, Na]
+            if blink:
+                adds[np.random.random(adds.shape[0]) < 0.01] += 1 << 30
+            k = int(adds.argmin())
+            idx = bisect.bisect_right(starts, k) - 1
+            r = rids[idx]
+            routes[r].insert(k - starts[idx], c)
+            rid[c] = r
+            load[r] += dc
+
+    # ------------------------------------------------------------------ driver
+    def solve(self, routes0, deadline, save):
+        rng = self.rng
+        n = self.n
+        routes, rid, load = self.compact(routes0)
+        self.local_search(routes, rid, load, range(1, n + 1), deadline)
+        routes, rid, load = self.compact(routes)
+        cur_cost = self.total_cost(routes)
+        best_cost = cur_cost
+        best_routes = [R[:] for R in routes]
+        save(best_routes, best_cost)
+        cur_routes, cur_rid, cur_load = routes, rid, load
+
+        avg_edge = cur_cost / max(1, n + len(routes))
+        T0 = max(1.0, 0.3 * avg_edge)
+        Tf = 1.0
+        t_start = time.time()
+        span = max(1e-6, deadline - t_start)
+        while True:
+            now = time.time()
+            if now >= deadline:
+                break
+            frac = min(1.0, (now - t_start) / span)
+            T = T0 * (Tf / T0) ** frac
+            work = [R[:] for R in cur_routes]
+            wrid = cur_rid[:]
+            wload = cur_load[:]
+            cbar = 10.0 + rng.random() * 8.0
+            removed, cuts = self.ruin(work, wrid, wload, cbar)
+            if not removed:
+                continue
+            self.recreate(work, wrid, wload, removed)
+            pending = set(removed)
+            pending.update(cuts)
+            for c in removed:
+                R = work[wrid[c]]
+                k = R.index(c)
+                if k > 0:
+                    pending.add(R[k - 1])
+                if k + 1 < len(R):
+                    pending.add(R[k + 1])
+            self.local_search(work, wrid, wload, pending, deadline)
+            new_cost = self.total_cost(work)
+            if new_cost <= cur_cost or rng.random() < math.exp((cur_cost - new_cost) / T):
+                if any(not R for R in work):
+                    work, wrid, wload = self.compact(work)
+                cur_routes, cur_rid, cur_load = work, wrid, wload
+                cur_cost = new_cost
+                if new_cost < best_cost:
+                    best_cost = new_cost
+                    best_routes = [R[:] for R in work if R]
+                    save(best_routes, best_cost)
+        return best_routes, best_cost
 
 
 def main():
@@ -188,23 +459,40 @@ def main():
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     t0 = time.time()
-    deadline = t0 + max(2.0, a.time - 2.0)  # leave headroom before the loop's hard kill
+    deadline = t0 + max(3.0, a.time - 2.0)
+    rng = random.Random(a.seed)
     np.random.seed(a.seed % (2**31 - 1))
 
     inst = load_instance(a.target)
-    D = dist_matrix(inst["coords"])
+    Dn = np.asarray(dist_matrix(inst["coords"]))
+    if Dn.dtype.kind == "f" and np.all(Dn == np.rint(Dn)):
+        Dn = np.rint(Dn).astype(np.int64)
     demand, cap = inst["demand"], inst["capacity"]
 
     def save(routes, obj):
-        d = {"target": a.target, "obj": int(obj), "solution": {"routes": [list(map(int, r)) for r in routes if r]}}
+        d = {
+            "target": a.target,
+            "obj": int(round(obj)),
+            "solution": {"routes": [list(map(int, r)) for r in routes if r]},
+        }
         tmp = a.out + ".tmp"
-        json.dump(d, open(tmp, "w"))
+        with open(tmp, "w") as f:
+            json.dump(d, f)
         os.replace(tmp, a.out)
 
-    routes = clarke_wright(D, demand, cap)
-    routes = [two_opt(r, D, deadline) for r in routes]
-    save(routes, sum(_route_cost(r, D) for r in routes))  # feasible on disk before local search
-    local_search(routes, D, demand, cap, deadline, save)
+    routes = clarke_wright(Dn, demand, cap)
+    D = Dn.tolist()
+
+    def rc(R):
+        path = [0, *R, 0]
+        return sum(D[path[k]][path[k + 1]] for k in range(len(path) - 1))
+
+    save(routes, sum(rc(R) for R in routes))  # feasible on disk before anything else
+    try:
+        solver = CVRP(Dn, demand, cap, rng)
+        solver.solve(routes, deadline, save)
+    except Exception:
+        pass  # best feasible solution is already on disk
 
 
 if __name__ == "__main__":
