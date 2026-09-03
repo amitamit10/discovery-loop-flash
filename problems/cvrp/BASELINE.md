@@ -53,23 +53,24 @@ The checker is also proven to reject bad solutions: a customer visited twice, a 
 customer, and a customer number out of range are each returned as `feasible: false`. See
 `python problems/cvrp/test_cvrp.py` (offline verifier + `--no-publish` tests) and the ground-truth test inside it.
 
-## Proposed night.json slot (do NOT edit night.json until after tonight's run)
+## night.json slot (shipped 2026-09-03)
 
-`night.json` currently runs `miplib_heur` then `pglib_opf`, 235 min each from 22:00 (→ ~05:50). A third slot for
-`cvrp` appended as-is finishes late; pick a length that fits the morning:
+`night.json` runs three 160-minute slots from 22:00: `miplib_heur`, `pglib_opf`, then `cvrp` (finish ~06:00).
+The night keeps its previous total length; the newest problem runs last so a failure there cannot cost the
+others their slot. The first real evolution iteration (smoke, 2026-09-03) became champion and improved all ten
+targets, so the slot went live the same night.
 
 ```json
 {
   "slots": [
-    {"problem": "miplib_heur", "minutes": 235, "budget": 15},
-    {"problem": "pglib_opf",   "minutes": 235, "budget": 15},
-    {"problem": "cvrp",        "minutes": 180, "budget": 15}
+    {"problem": "miplib_heur", "minutes": 160, "budget": 15},
+    {"problem": "pglib_opf",   "minutes": 160, "budget": 15},
+    {"problem": "cvrp",        "minutes": 160, "budget": 15}
   ]
 }
 ```
 
-Timing from a 22:00 start: miplib_heur 22:00→01:55, pglib_opf 01:55→05:50, **cvrp 05:50→08:50** at 180 min
-(use `"minutes": 235` to match the others, which pushes the finish to ~09:45). Each slot runs
+Timing from a 22:00 start: miplib_heur 22:00→00:40, pglib_opf 00:40→03:20, cvrp 03:20→06:00. Each slot runs
 `loop.py --problem cvrp --wall-minutes M --budget B --iters 200`; the loop already stops early on plateau or
 budget. Publishing stays enabled for a real night slot (CVRPLIB has no email address, so publish only does the
 GitHub push of `best-cvrp/`); use `--no-publish` only for isolated experiments like the smoke run above.
