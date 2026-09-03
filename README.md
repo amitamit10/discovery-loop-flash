@@ -63,3 +63,26 @@ python loop.py --problem miplib_heur --eval-only               # seed heuristic 
 python loop.py --problem miplib_heur --wall-minutes 235 --budget 15
 python problems/miplib_heur/holdout.py best-miplib_heur/solver.py
 ```
+
+## cvrp: capacitated vehicle routing on the CVRPLIB X benchmark
+
+Vehicle routing is fuel, miles and delivery cost for every fleet. Targets are ten CVRPLIB X instances
+(Uchoa et al., 2017; 200–500 nodes) whose best known solution is **not proven optimal**, so a lower feasible
+cost is a genuine result. `problems/cvrp/records.py` fetches the best-known cost and optimality flag live from
+the CVRPLIB table and caches them; `verify.py` parses the TSPLIB `.vrp` and re-checks every customer served
+once, every route within capacity, and the rounded-EUC_2D cost — it reproduces all ten official best-known
+`.sol` costs exactly. Seed solver = Clarke-Wright savings + 2-opt / relocate / swap local search (pure python +
+numpy, no external solver). Instances download on first use. Nothing is emailed; the GitHub push of `best-cvrp/`
+is the publication and a verified improvement goes to CVRPLIB by hand. See `problems/cvrp/BASELINE.md` for seed
+gaps and the proposed night slot.
+
+```powershell
+python loop.py --problem cvrp --eval-only                      # seed solver on all 10 targets, no model calls
+python loop.py --problem cvrp --iters 1 --time 60 --workers 2 --no-publish   # smoke run, publishing disabled
+python loop.py --problem cvrp --wall-minutes 180 --budget 15
+python problems/cvrp/verify.py best-cvrp/sol/X-n280-k17.json
+python problems/cvrp/test_cvrp.py                             # verifier + --no-publish tests
+```
+
+`--no-publish` (on any problem) suppresses every `publish.py` call — no git commit/push, no maintainer email —
+for isolated experiments; the default behaviour is unchanged.

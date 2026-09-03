@@ -1,0 +1,902 @@
+{
+ "X-n101-k25": {
+  "customers": 100,
+  "k": 25,
+  "capacity": 206,
+  "bks": 27591.0,
+  "optimal": true,
+  "instance_id": 158,
+  "bks_id": 158
+ },
+ "X-n106-k14": {
+  "customers": 105,
+  "k": 14,
+  "capacity": 600,
+  "bks": 26362.0,
+  "optimal": true,
+  "instance_id": 159,
+  "bks_id": 159
+ },
+ "X-n110-k13": {
+  "customers": 109,
+  "k": 13,
+  "capacity": 66,
+  "bks": 14971.0,
+  "optimal": true,
+  "instance_id": 160,
+  "bks_id": 160
+ },
+ "X-n115-k10": {
+  "customers": 114,
+  "k": 10,
+  "capacity": 169,
+  "bks": 12747.0,
+  "optimal": true,
+  "instance_id": 161,
+  "bks_id": 161
+ },
+ "X-n120-k6": {
+  "customers": 119,
+  "k": 6,
+  "capacity": 21,
+  "bks": 13332.0,
+  "optimal": true,
+  "instance_id": 162,
+  "bks_id": 162
+ },
+ "X-n125-k30": {
+  "customers": 124,
+  "k": 30,
+  "capacity": 188,
+  "bks": 55539.0,
+  "optimal": true,
+  "instance_id": 163,
+  "bks_id": 163
+ },
+ "X-n129-k18": {
+  "customers": 128,
+  "k": 18,
+  "capacity": 39,
+  "bks": 28940.0,
+  "optimal": true,
+  "instance_id": 164,
+  "bks_id": 164
+ },
+ "X-n134-k13": {
+  "customers": 133,
+  "k": 13,
+  "capacity": 643,
+  "bks": 10916.0,
+  "optimal": true,
+  "instance_id": 165,
+  "bks_id": 165
+ },
+ "X-n139-k10": {
+  "customers": 138,
+  "k": 10,
+  "capacity": 106,
+  "bks": 13590.0,
+  "optimal": true,
+  "instance_id": 166,
+  "bks_id": 166
+ },
+ "X-n143-k7": {
+  "customers": 142,
+  "k": 7,
+  "capacity": 1190,
+  "bks": 15700.0,
+  "optimal": true,
+  "instance_id": 167,
+  "bks_id": 167
+ },
+ "X-n148-k46": {
+  "customers": 147,
+  "k": 46,
+  "capacity": 18,
+  "bks": 43448.0,
+  "optimal": true,
+  "instance_id": 168,
+  "bks_id": 168
+ },
+ "X-n153-k22": {
+  "customers": 152,
+  "k": 22,
+  "capacity": 144,
+  "bks": 21220.0,
+  "optimal": true,
+  "instance_id": 169,
+  "bks_id": 169
+ },
+ "X-n157-k13": {
+  "customers": 156,
+  "k": 13,
+  "capacity": 12,
+  "bks": 16876.0,
+  "optimal": true,
+  "instance_id": 170,
+  "bks_id": 170
+ },
+ "X-n162-k11": {
+  "customers": 161,
+  "k": 11,
+  "capacity": 1174,
+  "bks": 14138.0,
+  "optimal": true,
+  "instance_id": 171,
+  "bks_id": 171
+ },
+ "X-n167-k10": {
+  "customers": 166,
+  "k": 10,
+  "capacity": 133,
+  "bks": 20557.0,
+  "optimal": true,
+  "instance_id": 172,
+  "bks_id": 172
+ },
+ "X-n172-k51": {
+  "customers": 171,
+  "k": 51,
+  "capacity": 161,
+  "bks": 45607.0,
+  "optimal": true,
+  "instance_id": 173,
+  "bks_id": 173
+ },
+ "X-n176-k26": {
+  "customers": 175,
+  "k": 26,
+  "capacity": 142,
+  "bks": 47812.0,
+  "optimal": true,
+  "instance_id": 174,
+  "bks_id": 174
+ },
+ "X-n181-k23": {
+  "customers": 180,
+  "k": 23,
+  "capacity": 8,
+  "bks": 25569.0,
+  "optimal": true,
+  "instance_id": 175,
+  "bks_id": 175
+ },
+ "X-n186-k15": {
+  "customers": 185,
+  "k": 15,
+  "capacity": 974,
+  "bks": 24145.0,
+  "optimal": true,
+  "instance_id": 176,
+  "bks_id": 176
+ },
+ "X-n190-k8": {
+  "customers": 189,
+  "k": 8,
+  "capacity": 138,
+  "bks": 16980.0,
+  "optimal": true,
+  "instance_id": 177,
+  "bks_id": 177
+ },
+ "X-n195-k51": {
+  "customers": 194,
+  "k": 51,
+  "capacity": 181,
+  "bks": 44225.0,
+  "optimal": true,
+  "instance_id": 178,
+  "bks_id": 178
+ },
+ "X-n200-k36": {
+  "customers": 199,
+  "k": 36,
+  "capacity": 402,
+  "bks": 58578.0,
+  "optimal": true,
+  "instance_id": 179,
+  "bks_id": 179
+ },
+ "X-n204-k19": {
+  "customers": 203,
+  "k": 19,
+  "capacity": 836,
+  "bks": 19565.0,
+  "optimal": true,
+  "instance_id": 180,
+  "bks_id": 180
+ },
+ "X-n209-k16": {
+  "customers": 208,
+  "k": 16,
+  "capacity": 101,
+  "bks": 30656.0,
+  "optimal": true,
+  "instance_id": 181,
+  "bks_id": 181
+ },
+ "X-n214-k11": {
+  "customers": 213,
+  "k": 11,
+  "capacity": 944,
+  "bks": 10856.0,
+  "optimal": true,
+  "instance_id": 182,
+  "bks_id": 182
+ },
+ "X-n219-k73": {
+  "customers": 218,
+  "k": 73,
+  "capacity": 3,
+  "bks": 117595.0,
+  "optimal": true,
+  "instance_id": 183,
+  "bks_id": 183
+ },
+ "X-n223-k34": {
+  "customers": 222,
+  "k": 34,
+  "capacity": 37,
+  "bks": 40437.0,
+  "optimal": true,
+  "instance_id": 184,
+  "bks_id": 184
+ },
+ "X-n228-k23": {
+  "customers": 227,
+  "k": 23,
+  "capacity": 154,
+  "bks": 25742.0,
+  "optimal": true,
+  "instance_id": 185,
+  "bks_id": 185
+ },
+ "X-n233-k16": {
+  "customers": 232,
+  "k": 16,
+  "capacity": 631,
+  "bks": 19230.0,
+  "optimal": true,
+  "instance_id": 186,
+  "bks_id": 186
+ },
+ "X-n237-k14": {
+  "customers": 236,
+  "k": 14,
+  "capacity": 18,
+  "bks": 27042.0,
+  "optimal": true,
+  "instance_id": 187,
+  "bks_id": 187
+ },
+ "X-n242-k48": {
+  "customers": 241,
+  "k": 48,
+  "capacity": 28,
+  "bks": 82751.0,
+  "optimal": true,
+  "instance_id": 188,
+  "bks_id": 188
+ },
+ "X-n247-k50": {
+  "customers": 246,
+  "k": 47,
+  "capacity": 134,
+  "bks": 37274.0,
+  "optimal": true,
+  "instance_id": 189,
+  "bks_id": 189
+ },
+ "X-n251-k28": {
+  "customers": 250,
+  "k": 28,
+  "capacity": 69,
+  "bks": 38684.0,
+  "optimal": true,
+  "instance_id": 190,
+  "bks_id": 190
+ },
+ "X-n256-k16": {
+  "customers": 255,
+  "k": 16,
+  "capacity": 1225,
+  "bks": 18839.0,
+  "optimal": true,
+  "instance_id": 191,
+  "bks_id": 191
+ },
+ "X-n261-k13": {
+  "customers": 260,
+  "k": 13,
+  "capacity": 1081,
+  "bks": 26558.0,
+  "optimal": true,
+  "instance_id": 192,
+  "bks_id": 192
+ },
+ "X-n266-k58": {
+  "customers": 265,
+  "k": 58,
+  "capacity": 35,
+  "bks": 75478.0,
+  "optimal": true,
+  "instance_id": 193,
+  "bks_id": 193
+ },
+ "X-n270-k35": {
+  "customers": 269,
+  "k": 35,
+  "capacity": 585,
+  "bks": 35291.0,
+  "optimal": true,
+  "instance_id": 194,
+  "bks_id": 194
+ },
+ "X-n275-k28": {
+  "customers": 274,
+  "k": 28,
+  "capacity": 10,
+  "bks": 21245.0,
+  "optimal": true,
+  "instance_id": 195,
+  "bks_id": 195
+ },
+ "X-n280-k17": {
+  "customers": 279,
+  "k": 17,
+  "capacity": 192,
+  "bks": 33503.0,
+  "optimal": false,
+  "instance_id": 196,
+  "bks_id": 196
+ },
+ "X-n284-k15": {
+  "customers": 283,
+  "k": 15,
+  "capacity": 109,
+  "bks": 20215.0,
+  "optimal": true,
+  "instance_id": 197,
+  "bks_id": 197
+ },
+ "X-n289-k60": {
+  "customers": 288,
+  "k": 60,
+  "capacity": 267,
+  "bks": 95151.0,
+  "optimal": true,
+  "instance_id": 198,
+  "bks_id": 198
+ },
+ "X-n294-k50": {
+  "customers": 293,
+  "k": 50,
+  "capacity": 285,
+  "bks": 47161.0,
+  "optimal": true,
+  "instance_id": 199,
+  "bks_id": 199
+ },
+ "X-n298-k31": {
+  "customers": 297,
+  "k": 31,
+  "capacity": 55,
+  "bks": 34231.0,
+  "optimal": true,
+  "instance_id": 200,
+  "bks_id": 200
+ },
+ "X-n303-k21": {
+  "customers": 302,
+  "k": 21,
+  "capacity": 794,
+  "bks": 21736.0,
+  "optimal": false,
+  "instance_id": 201,
+  "bks_id": 201
+ },
+ "X-n308-k13": {
+  "customers": 307,
+  "k": 13,
+  "capacity": 246,
+  "bks": 25859.0,
+  "optimal": false,
+  "instance_id": 202,
+  "bks_id": 202
+ },
+ "X-n313-k71": {
+  "customers": 312,
+  "k": 71,
+  "capacity": 248,
+  "bks": 94043.0,
+  "optimal": true,
+  "instance_id": 203,
+  "bks_id": 203
+ },
+ "X-n317-k53": {
+  "customers": 316,
+  "k": 53,
+  "capacity": 6,
+  "bks": 78355.0,
+  "optimal": true,
+  "instance_id": 204,
+  "bks_id": 204
+ },
+ "X-n322-k28": {
+  "customers": 321,
+  "k": 28,
+  "capacity": 868,
+  "bks": 29834.0,
+  "optimal": true,
+  "instance_id": 205,
+  "bks_id": 205
+ },
+ "X-n327-k20": {
+  "customers": 326,
+  "k": 20,
+  "capacity": 128,
+  "bks": 27532.0,
+  "optimal": false,
+  "instance_id": 206,
+  "bks_id": 206
+ },
+ "X-n331-k15": {
+  "customers": 330,
+  "k": 15,
+  "capacity": 23,
+  "bks": 31102.0,
+  "optimal": true,
+  "instance_id": 207,
+  "bks_id": 207
+ },
+ "X-n336-k84": {
+  "customers": 335,
+  "k": 84,
+  "capacity": 203,
+  "bks": 139111.0,
+  "optimal": false,
+  "instance_id": 208,
+  "bks_id": 208
+ },
+ "X-n344-k43": {
+  "customers": 343,
+  "k": 43,
+  "capacity": 61,
+  "bks": 42050.0,
+  "optimal": true,
+  "instance_id": 209,
+  "bks_id": 209
+ },
+ "X-n351-k40": {
+  "customers": 350,
+  "k": 40,
+  "capacity": 436,
+  "bks": 25896.0,
+  "optimal": true,
+  "instance_id": 210,
+  "bks_id": 210
+ },
+ "X-n359-k29": {
+  "customers": 358,
+  "k": 29,
+  "capacity": 68,
+  "bks": 51505.0,
+  "optimal": true,
+  "instance_id": 211,
+  "bks_id": 211
+ },
+ "X-n367-k17": {
+  "customers": 366,
+  "k": 17,
+  "capacity": 218,
+  "bks": 22814.0,
+  "optimal": true,
+  "instance_id": 212,
+  "bks_id": 212
+ },
+ "X-n376-k94": {
+  "customers": 375,
+  "k": 94,
+  "capacity": 4,
+  "bks": 147713.0,
+  "optimal": true,
+  "instance_id": 213,
+  "bks_id": 213
+ },
+ "X-n384-k52": {
+  "customers": 383,
+  "k": 52,
+  "capacity": 564,
+  "bks": 65928.0,
+  "optimal": true,
+  "instance_id": 214,
+  "bks_id": 214
+ },
+ "X-n393-k38": {
+  "customers": 392,
+  "k": 38,
+  "capacity": 78,
+  "bks": 38260.0,
+  "optimal": true,
+  "instance_id": 215,
+  "bks_id": 215
+ },
+ "X-n401-k29": {
+  "customers": 400,
+  "k": 29,
+  "capacity": 745,
+  "bks": 66154.0,
+  "optimal": false,
+  "instance_id": 216,
+  "bks_id": 216
+ },
+ "X-n411-k19": {
+  "customers": 410,
+  "k": 19,
+  "capacity": 216,
+  "bks": 19712.0,
+  "optimal": false,
+  "instance_id": 217,
+  "bks_id": 217
+ },
+ "X-n420-k130": {
+  "customers": 419,
+  "k": 130,
+  "capacity": 18,
+  "bks": 107798.0,
+  "optimal": true,
+  "instance_id": 218,
+  "bks_id": 218
+ },
+ "X-n429-k61": {
+  "customers": 428,
+  "k": 61,
+  "capacity": 536,
+  "bks": 65449.0,
+  "optimal": false,
+  "instance_id": 219,
+  "bks_id": 219
+ },
+ "X-n439-k37": {
+  "customers": 438,
+  "k": 37,
+  "capacity": 12,
+  "bks": 36391.0,
+  "optimal": true,
+  "instance_id": 220,
+  "bks_id": 220
+ },
+ "X-n449-k29": {
+  "customers": 448,
+  "k": 29,
+  "capacity": 777,
+  "bks": 55233.0,
+  "optimal": false,
+  "instance_id": 221,
+  "bks_id": 221
+ },
+ "X-n459-k26": {
+  "customers": 458,
+  "k": 26,
+  "capacity": 1106,
+  "bks": 24139.0,
+  "optimal": false,
+  "instance_id": 222,
+  "bks_id": 222
+ },
+ "X-n469-k138": {
+  "customers": 468,
+  "k": 138,
+  "capacity": 256,
+  "bks": 221824.0,
+  "optimal": true,
+  "instance_id": 223,
+  "bks_id": 223
+ },
+ "X-n480-k70": {
+  "customers": 479,
+  "k": 70,
+  "capacity": 52,
+  "bks": 89449.0,
+  "optimal": false,
+  "instance_id": 224,
+  "bks_id": 224
+ },
+ "X-n491-k59": {
+  "customers": 490,
+  "k": 59,
+  "capacity": 428,
+  "bks": 66483.0,
+  "optimal": false,
+  "instance_id": 225,
+  "bks_id": 225
+ },
+ "X-n502-k39": {
+  "customers": 501,
+  "k": 39,
+  "capacity": 13,
+  "bks": 69226.0,
+  "optimal": false,
+  "instance_id": 226,
+  "bks_id": 226
+ },
+ "X-n513-k21": {
+  "customers": 512,
+  "k": 21,
+  "capacity": 142,
+  "bks": 24201.0,
+  "optimal": false,
+  "instance_id": 227,
+  "bks_id": 227
+ },
+ "X-n524-k153": {
+  "customers": 523,
+  "k": 137,
+  "capacity": 125,
+  "bks": 154593.0,
+  "optimal": true,
+  "instance_id": 228,
+  "bks_id": 228
+ },
+ "X-n536-k96": {
+  "customers": 535,
+  "k": 96,
+  "capacity": 371,
+  "bks": 94846.0,
+  "optimal": false,
+  "instance_id": 229,
+  "bks_id": 229
+ },
+ "X-n548-k50": {
+  "customers": 547,
+  "k": 50,
+  "capacity": 11,
+  "bks": 86700.0,
+  "optimal": true,
+  "instance_id": 230,
+  "bks_id": 230
+ },
+ "X-n561-k42": {
+  "customers": 560,
+  "k": 42,
+  "capacity": 74,
+  "bks": 42717.0,
+  "optimal": false,
+  "instance_id": 231,
+  "bks_id": 231
+ },
+ "X-n573-k30": {
+  "customers": 572,
+  "k": 30,
+  "capacity": 210,
+  "bks": 50673.0,
+  "optimal": false,
+  "instance_id": 232,
+  "bks_id": 232
+ },
+ "X-n586-k159": {
+  "customers": 585,
+  "k": 159,
+  "capacity": 28,
+  "bks": 190316.0,
+  "optimal": false,
+  "instance_id": 233,
+  "bks_id": 233
+ },
+ "X-n599-k92": {
+  "customers": 598,
+  "k": 92,
+  "capacity": 487,
+  "bks": 108451.0,
+  "optimal": false,
+  "instance_id": 234,
+  "bks_id": 234
+ },
+ "X-n613-k62": {
+  "customers": 612,
+  "k": 62,
+  "capacity": 523,
+  "bks": 59535.0,
+  "optimal": false,
+  "instance_id": 235,
+  "bks_id": 235
+ },
+ "X-n627-k43": {
+  "customers": 626,
+  "k": 43,
+  "capacity": 110,
+  "bks": 62164.0,
+  "optimal": false,
+  "instance_id": 236,
+  "bks_id": 236
+ },
+ "X-n641-k35": {
+  "customers": 640,
+  "k": 35,
+  "capacity": 1381,
+  "bks": 63682.0,
+  "optimal": false,
+  "instance_id": 237,
+  "bks_id": 237
+ },
+ "X-n655-k131": {
+  "customers": 654,
+  "k": 131,
+  "capacity": 5,
+  "bks": 106780.0,
+  "optimal": true,
+  "instance_id": 238,
+  "bks_id": 238
+ },
+ "X-n670-k130": {
+  "customers": 669,
+  "k": 126,
+  "capacity": 129,
+  "bks": 146332.0,
+  "optimal": true,
+  "instance_id": 239,
+  "bks_id": 239
+ },
+ "X-n685-k75": {
+  "customers": 684,
+  "k": 75,
+  "capacity": 408,
+  "bks": 68205.0,
+  "optimal": false,
+  "instance_id": 240,
+  "bks_id": 240
+ },
+ "X-n701-k44": {
+  "customers": 700,
+  "k": 44,
+  "capacity": 87,
+  "bks": 81923.0,
+  "optimal": false,
+  "instance_id": 241,
+  "bks_id": 241
+ },
+ "X-n716-k35": {
+  "customers": 715,
+  "k": 35,
+  "capacity": 1007,
+  "bks": 43373.0,
+  "optimal": false,
+  "instance_id": 242,
+  "bks_id": 242
+ },
+ "X-n733-k159": {
+  "customers": 732,
+  "k": 159,
+  "capacity": 25,
+  "bks": 136187.0,
+  "optimal": false,
+  "instance_id": 243,
+  "bks_id": 243
+ },
+ "X-n749-k98": {
+  "customers": 748,
+  "k": 98,
+  "capacity": 396,
+  "bks": 77269.0,
+  "optimal": false,
+  "instance_id": 244,
+  "bks_id": 244
+ },
+ "X-n766-k71": {
+  "customers": 765,
+  "k": 71,
+  "capacity": 166,
+  "bks": 114417.0,
+  "optimal": false,
+  "instance_id": 245,
+  "bks_id": 245
+ },
+ "X-n783-k48": {
+  "customers": 782,
+  "k": 48,
+  "capacity": 832,
+  "bks": 72386.0,
+  "optimal": false,
+  "instance_id": 246,
+  "bks_id": 246
+ },
+ "X-n801-k40": {
+  "customers": 800,
+  "k": 40,
+  "capacity": 20,
+  "bks": 73305.0,
+  "optimal": false,
+  "instance_id": 247,
+  "bks_id": 247
+ },
+ "X-n819-k171": {
+  "customers": 818,
+  "k": 171,
+  "capacity": 358,
+  "bks": 158121.0,
+  "optimal": false,
+  "instance_id": 248,
+  "bks_id": 248
+ },
+ "X-n837-k142": {
+  "customers": 836,
+  "k": 142,
+  "capacity": 44,
+  "bks": 193737.0,
+  "optimal": false,
+  "instance_id": 249,
+  "bks_id": 249
+ },
+ "X-n856-k95": {
+  "customers": 855,
+  "k": 95,
+  "capacity": 9,
+  "bks": 88965.0,
+  "optimal": true,
+  "instance_id": 250,
+  "bks_id": 250
+ },
+ "X-n876-k59": {
+  "customers": 875,
+  "k": 59,
+  "capacity": 764,
+  "bks": 99299.0,
+  "optimal": false,
+  "instance_id": 251,
+  "bks_id": 251
+ },
+ "X-n895-k37": {
+  "customers": 894,
+  "k": 37,
+  "capacity": 1816,
+  "bks": 53860.0,
+  "optimal": false,
+  "instance_id": 252,
+  "bks_id": 252
+ },
+ "X-n916-k207": {
+  "customers": 915,
+  "k": 207,
+  "capacity": 33,
+  "bks": 329179.0,
+  "optimal": false,
+  "instance_id": 253,
+  "bks_id": 253
+ },
+ "X-n936-k151": {
+  "customers": 935,
+  "k": 151,
+  "capacity": 138,
+  "bks": 132715.0,
+  "optimal": false,
+  "instance_id": 254,
+  "bks_id": 254
+ },
+ "X-n957-k87": {
+  "customers": 956,
+  "k": 87,
+  "capacity": 11,
+  "bks": 85465.0,
+  "optimal": false,
+  "instance_id": 255,
+  "bks_id": 255
+ },
+ "X-n979-k58": {
+  "customers": 978,
+  "k": 58,
+  "capacity": 998,
+  "bks": 118973.0,
+  "optimal": false,
+  "instance_id": 256,
+  "bks_id": 256
+ },
+ "X-n1001-k43": {
+  "customers": 1000,
+  "k": 43,
+  "capacity": 131,
+  "bks": 72346.0,
+  "optimal": false,
+  "instance_id": 257,
+  "bks_id": 257
+ }
+}
