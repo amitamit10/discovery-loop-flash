@@ -48,3 +48,18 @@ python loop.py --problem pglib_opf --eval-only              # seed solver on all
 python loop.py --problem pglib_opf --wall-minutes 235 --budget 15
 python problems/pglib_opf/verify.py best-pglib_opf/sol/pglib_opf_case14_ieee.json
 ```
+
+## miplib_heur: a general primal heuristic vs HiGHS default
+
+Instead of chasing open instances, this problem evolves a GENERAL primal heuristic (Python on highspy) and scores it by
+relative primal gap at 60 s on MIPLIB 2017 benchmark instances with PROVEN optima, so the checker is exact. The value to
+beat per instance is what plain HiGHS (default options, 2 threads) reaches on this machine in the same slot
+(`problems/miplib_heur/baseline.py --measure --assign` builds `baseline.json`: 20 train + 10 holdout instances).
+`holdout.py` scores a champion on instances the model never saw; name- or signature-keyed tricks are disqualified.
+Nothing is emailed; the champion solver.py is the deliverable and upstreaming to HiGHS is a human decision.
+
+```powershell
+python loop.py --problem miplib_heur --eval-only               # seed heuristic on the train set, no model calls
+python loop.py --problem miplib_heur --wall-minutes 235 --budget 15
+python problems/miplib_heur/holdout.py best-miplib_heur/solver.py
+```

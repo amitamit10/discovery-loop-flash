@@ -32,3 +32,4 @@ _.RATE_B
 _.RATE_C
 _.STARTUP
 _.SHUTDOWN
+_.author

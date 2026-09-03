@@ -1,0 +1,539 @@
+{
+ "markshare_4_0": {
+  "obj": 1.0,
+  "gap": 0.0,
+  "opt": 1.0,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "reject"
+ },
+ "markshare2": {
+  "obj": 40.0,
+  "gap": 39.0,
+  "opt": 1.0,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "train"
+ },
+ "gen-ip054": {
+  "obj": 6858.262906057999,
+  "gap": 0.0025284828449268055,
+  "opt": 6840.96564179,
+  "sense": "min",
+  "secs": 60.4,
+  "note": "",
+  "set": "reject"
+ },
+ "enlight_hard": {
+  "obj": 37.0,
+  "gap": 0.0,
+  "opt": 37.0,
+  "sense": "min",
+  "secs": 20.2,
+  "note": "",
+  "set": "reject"
+ },
+ "timtab1": {
+  "obj": 764771.99999978,
+  "gap": 0.0,
+  "opt": 764771.99999978,
+  "sense": "min",
+  "secs": 37.7,
+  "note": "",
+  "set": "reject"
+ },
+ "pk1": {
+  "obj": 15.999999900000029,
+  "gap": 0.4545454454545481,
+  "opt": 11.0,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "holdout"
+ },
+ "gen-ip002": {
+  "obj": -4766.4447485,
+  "gap": 0.0036140482930993646,
+  "opt": -4783.733392,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "reject"
+ },
+ "sp150x300d": {
+  "obj": 69.0,
+  "gap": 0.0,
+  "opt": 69.0,
+  "sense": "min",
+  "secs": 0.5,
+  "note": "",
+  "set": "reject"
+ },
+ "neos-3046615-murg": {
+  "obj": 1602.0,
+  "gap": 0.00125,
+  "opt": 1600.0,
+  "sense": "min",
+  "secs": 60.6,
+  "note": "",
+  "set": "reject"
+ },
+ "neos-3754480-nidda": {
+  "obj": 14455.801605861605,
+  "gap": 0.11716201051118241,
+  "opt": 12939.7540104743,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "holdout"
+ },
+ "mas76": {
+  "obj": 40005.0541419896,
+  "gap": 3.79926022587674e-09,
+  "opt": 40005.05398999999,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "reject"
+ },
+ "neos-2657525-crna": {
+  "obj": 8.0666482,
+  "gap": 3.4548706943207996,
+  "opt": 1.810748,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "holdout"
+ },
+ "mas74": {
+  "obj": 11801.185728961536,
+  "gap": 7.593759720870674e-10,
+  "opt": 11801.18572,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "reject"
+ },
+ "glass4": {
+  "obj": 1833351510.1447935,
+  "gap": 0.5277768834985438,
+  "opt": 1200012599.972384,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "train"
+ },
+ "exp-1-500-5-5": {
+  "obj": 65886.99999999971,
+  "gap": -4.41723412156172e-15,
+  "opt": 65887.0,
+  "sense": "min",
+  "secs": 3.7,
+  "note": "",
+  "set": "reject"
+ },
+ "neos5": {
+  "obj": 14.999999999979195,
+  "gap": -1.3869794202037155e-12,
+  "opt": 15.0,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "reject"
+ },
+ "supportcase26": {
+  "obj": 1781.002719350491,
+  "gap": 0.0205595190915494,
+  "opt": 1745.123813,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "train"
+ },
+ "tr12-30": {
+  "obj": 130600.99999999997,
+  "gap": 3.828601182327761e-05,
+  "opt": 130595.9999999999,
+  "sense": "min",
+  "secs": 60.4,
+  "note": "",
+  "set": "reject"
+ },
+ "graphdraw-domain": {
+  "obj": 20706.99999999997,
+  "gap": 0.0518642703327362,
+  "opt": 19685.99997550038,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "train"
+ },
+ "50v-10": {
+  "obj": 3521.459988877177,
+  "gap": 0.06350606303098079,
+  "opt": 3311.1799841,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "holdout"
+ },
+ "mad": {
+  "obj": 0.1599999999996711,
+  "gap": 0.1331999999996711,
+  "opt": 0.0268,
+  "sense": "min",
+  "secs": 60.5,
+  "note": "",
+  "set": "holdout"
+ },
+ "ic97_potential": {
+  "obj": 3953.000000000202,
+  "gap": 0.0027904792721379188,
+  "opt": 3941.99993090225,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "train"
+ },
+ "neos-911970": {
+  "obj": 54.75999999960136,
+  "gap": -7.279689390859916e-12,
+  "opt": 54.76,
+  "sense": "min",
+  "secs": 10.1,
+  "note": "",
+  "set": "reject"
+ },
+ "assign1-5-8": {
+  "obj": 211.99999999999932,
+  "gap": 6.166974687729229e-15,
+  "opt": 211.999999999998,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "reject"
+ },
+ "neos-3381206-awhea": {
+  "obj": 453.0,
+  "gap": 0.0,
+  "opt": 453.0,
+  "sense": "min",
+  "secs": 4.6,
+  "note": "",
+  "set": "reject"
+ },
+ "binkar10_1": {
+  "obj": 6742.200024000004,
+  "gap": 0.00012163682471136537,
+  "opt": 6741.38002393972,
+  "sense": "min",
+  "secs": 28.9,
+  "note": "",
+  "set": "reject"
+ },
+ "p200x1188c": {
+  "obj": 15078.0,
+  "gap": 0.0,
+  "opt": 15078.0,
+  "sense": "min",
+  "secs": 1.1,
+  "note": "",
+  "set": "reject"
+ },
+ "gmu-35-40": {
+  "obj": -2406107.5501,
+  "gap": 0.0002600282640830074,
+  "opt": -2406733.3688,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "reject"
+ },
+ "neos17": {
+  "obj": 0.15000257742257286,
+  "gap": 2.2572860247649373e-11,
+  "opt": 0.1500025774,
+  "sense": "min",
+  "secs": 7.6,
+  "note": "",
+  "set": "reject"
+ },
+ "beasleyC3": {
+  "obj": 754.0,
+  "gap": 1.156469556133814e-13,
+  "opt": 753.9999999999128,
+  "sense": "min",
+  "secs": 33.2,
+  "note": "",
+  "set": "reject"
+ },
+ "neos-3627168-kasai": {
+  "obj": 988585.6199999996,
+  "gap": -1.1775947320266992e-16,
+  "opt": 988585.6199999998,
+  "sense": "min",
+  "secs": 41.4,
+  "note": "",
+  "set": "reject"
+ },
+ "pg": {
+  "obj": -8674.342607117025,
+  "gap": 3.428556848050183e-13,
+  "opt": -8674.34260712,
+  "sense": "min",
+  "secs": 7.9,
+  "note": "",
+  "set": "reject"
+ },
+ "csched008": {
+  "obj": 179.99999999999994,
+  "gap": 0.040462427745664414,
+  "opt": 173.0,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "holdout"
+ },
+ "mc11": {
+  "obj": 11689.0,
+  "gap": 2.910009568509582e-14,
+  "opt": 11688.99999999966,
+  "sense": "min",
+  "secs": 36.5,
+  "note": "",
+  "set": "reject"
+ },
+ "neos-4338804-snowy": {
+  "obj": 1483.0,
+  "gap": 0.008157715839564922,
+  "opt": 1471.0,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "train"
+ },
+ "csched007": {
+  "obj": 434.0000000000001,
+  "gap": 0.23646723646725262,
+  "opt": 350.9999999999955,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "holdout"
+ },
+ "lotsize": {
+  "obj": 1514857.0000000007,
+  "gap": 0.023417184897936216,
+  "opt": 1480195.0,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "holdout"
+ },
+ "pg5_34": {
+  "obj": -14315.718649573093,
+  "gap": 0.0016482472873912966,
+  "opt": -14339.35345,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "train"
+ },
+ "neos-4954672-berkel": {
+  "obj": 2675586.999999998,
+  "gap": 0.02406581671903814,
+  "opt": 2612710.0,
+  "sense": "min",
+  "secs": 61.1,
+  "note": "",
+  "set": "holdout"
+ },
+ "mcsched": {
+  "obj": 211950.00000000003,
+  "gap": 0.00017459995375474418,
+  "opt": 211913.0,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "reject"
+ },
+ "gmu-35-50": {
+  "obj": -2607373.3981,
+  "gap": 0.00022428728759642401,
+  "opt": -2607958.33,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "reject"
+ },
+ "mik-250-20-75-4": {
+  "obj": -52301.0,
+  "gap": 0.0,
+  "opt": -52301.0,
+  "sense": "min",
+  "secs": 9.2,
+  "note": "",
+  "set": "reject"
+ },
+ "n5-3": {
+  "obj": 8105.000000000015,
+  "gap": 7.421835851364098e-13,
+  "opt": 8104.999999993999,
+  "sense": "min",
+  "secs": 22.6,
+  "note": "",
+  "set": "reject"
+ },
+ "uct-subprob": {
+  "obj": 325.0,
+  "gap": 0.03503184713375796,
+  "opt": 314.0,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "train"
+ },
+ "ran14x18-disj-8": {
+  "obj": 3741.999999964683,
+  "gap": 0.008081896542209848,
+  "opt": 3712.0,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "reject"
+ },
+ "b1c1s1": {
+  "obj": 27650.23,
+  "gap": 0.12654613606038073,
+  "opt": 24544.25,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "train"
+ },
+ "rococoC10-001000": {
+  "obj": 11473.0,
+  "gap": 0.0011343804537521816,
+  "opt": 11460.0,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "train"
+ },
+ "cost266-UUE": {
+  "obj": 27061748.12,
+  "gap": 0.07605917058161843,
+  "opt": 25148940.55999998,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "train"
+ },
+ "cvs16r128-89": {
+  "obj": -3.0,
+  "gap": 0.9690721649484536,
+  "opt": -97.0,
+  "sense": "min",
+  "secs": 64.0,
+  "note": "",
+  "set": "holdout"
+ },
+ "reblock115": {
+  "obj": -36345173.30000193,
+  "gap": 0.012375610538557742,
+  "opt": -36800603.2332,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "reject"
+ },
+ "milo-v12-6-r2-40-1": {
+  "obj": 329012.1687990342,
+  "gap": 0.007752441531907102,
+  "opt": 326481.14282799,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "train"
+ },
+ "rococoB10-011000": {
+  "obj": 25003.0,
+  "gap": 0.28556738135636794,
+  "opt": 19449.0,
+  "sense": "min",
+  "secs": 60.3,
+  "note": "",
+  "set": "train"
+ },
+ "fhnw-binpack4-48": {
+  "obj": null,
+  "gap": null,
+  "opt": 0.0,
+  "secs": 60.4,
+  "note": "HiGHS found no feasible point in the slot",
+  "set": "reject"
+ },
+ "neos-3024952-loue": {
+  "obj": null,
+  "gap": null,
+  "opt": 26756.0,
+  "secs": 60.3,
+  "note": "HiGHS found no feasible point in the slot",
+  "set": "reject"
+ },
+ "nu25-pr12": {
+  "obj": 53905.0,
+  "gap": 1.34977416087254e-16,
+  "opt": 53904.99999999999,
+  "sense": "min",
+  "secs": 5.5,
+  "note": "",
+  "set": "reject"
+ },
+ "qap10": {
+  "obj": 348.0,
+  "gap": 0.02352941176956125,
+  "opt": 339.9999999983871,
+  "sense": "min",
+  "secs": 60.4,
+  "note": "",
+  "set": "train"
+ },
+ "app1-1": {
+  "obj": -3.0,
+  "gap": 0.0,
+  "opt": -3.0,
+  "sense": "min",
+  "secs": 36.3,
+  "note": "",
+  "set": "reject"
+ },
+ "graph20-20-1rand": {
+  "obj": -7.0,
+  "gap": 0.2222222222222222,
+  "opt": -9.0,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "train"
+ },
+ "fastxgemm-n2r6s0t2": {
+  "obj": 526.9999999999936,
+  "gap": 1.2913043478260593,
+  "opt": 230.0,
+  "sense": "min",
+  "secs": 60.2,
+  "note": "",
+  "set": "train"
+ },
+ "neos-5107597-kakapo": {
+  "obj": null,
+  "gap": null,
+  "opt": 3644.99999999952,
+  "secs": 60.2,
+  "note": "HiGHS found no feasible point in the slot",
+  "set": "reject"
+ }
+}

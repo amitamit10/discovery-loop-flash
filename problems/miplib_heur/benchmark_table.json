@@ -1,0 +1,4280 @@
+{
+ "50v-10": {
+  "status": "easy",
+  "vars": 2013,
+  "bin": 1464,
+  "int": 183,
+  "cont": 366,
+  "rows": 233,
+  "nonz": 2745,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "mixed_binary"
+  ]
+ },
+ "drayage-25-23": {
+  "status": "easy",
+  "vars": 11090,
+  "bin": 11025,
+  "int": 0,
+  "cont": 65,
+  "rows": 4630,
+  "nonz": 41550,
+  "group": "drayage",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "drayage-100-23": {
+  "status": "easy",
+  "vars": 11090,
+  "bin": 11025,
+  "int": 0,
+  "cont": 65,
+  "rows": 4630,
+  "nonz": 41550,
+  "group": "drayage",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "savsched1": {
+  "status": "easy",
+  "vars": 328575,
+  "bin": 252731,
+  "int": 0,
+  "cont": 75844,
+  "rows": 295989,
+  "nonz": 1770507,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "reblock115": {
+  "status": "easy",
+  "vars": 1150,
+  "bin": 1150,
+  "int": 0,
+  "cont": 0,
+  "rows": 4735,
+  "nonz": 13724,
+  "group": "reblock",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "knapsack",
+   "precedence"
+  ]
+ },
+ "ran14x18-disj-8": {
+  "status": "easy",
+  "vars": 504,
+  "bin": 252,
+  "int": 0,
+  "cont": 252,
+  "rows": 447,
+  "nonz": 10277,
+  "group": "ran",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "roi2alpha3n4": {
+  "status": "easy",
+  "vars": 6816,
+  "bin": 6642,
+  "int": 0,
+  "cont": 174,
+  "rows": 1251,
+  "nonz": 878812,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "cardinality",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "leo2": {
+  "status": "easy",
+  "vars": 11100,
+  "bin": 11099,
+  "int": 0,
+  "cont": 1,
+  "rows": 593,
+  "nonz": 219959,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_covering",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "academictimetablesmall": {
+  "status": "easy",
+  "vars": 28926,
+  "bin": 28926,
+  "int": 0,
+  "cont": 0,
+  "rows": 23294,
+  "nonz": 268350,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "cardinality",
+   "decomposition",
+   "equation_knapsack",
+   "invariant_knapsack",
+   "knapsack",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "bab6": {
+  "status": "easy",
+  "vars": 114240,
+  "bin": 114240,
+  "int": 0,
+  "cont": 0,
+  "rows": 29904,
+  "nonz": 1283181,
+  "group": "bab",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binary",
+   "cardinality",
+   "equation_knapsack",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "gen-ip002": {
+  "status": "easy",
+  "vars": 41,
+  "bin": 0,
+  "int": 41,
+  "cont": 0,
+  "rows": 24,
+  "nonz": 922,
+  "group": "generated",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear"
+  ]
+ },
+ "gen-ip054": {
+  "status": "easy",
+  "vars": 30,
+  "bin": 0,
+  "int": 30,
+  "cont": 0,
+  "rows": 27,
+  "nonz": 532,
+  "group": "generated",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "variable_bound"
+  ]
+ },
+ "comp21-2idx": {
+  "status": "easy",
+  "vars": 10863,
+  "bin": 10792,
+  "int": 71,
+  "cont": 0,
+  "rows": 14038,
+  "nonz": 57301,
+  "group": "coursetimetabling",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "general_linear",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "comp07-2idx": {
+  "status": "easy",
+  "vars": 17264,
+  "bin": 17155,
+  "int": 109,
+  "cont": 0,
+  "rows": 21235,
+  "nonz": 86577,
+  "group": "coursetimetabling",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "general_linear",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "map16715-04": {
+  "status": "easy",
+  "vars": 164547,
+  "bin": 146,
+  "int": 0,
+  "cont": 164401,
+  "rows": 328818,
+  "nonz": 549920,
+  "group": "map",
+  "tags": [
+   "benchmark_suitable",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "ic97_potential": {
+  "status": "easy",
+  "vars": 728,
+  "bin": 450,
+  "int": 73,
+  "cont": 205,
+  "rows": 1046,
+  "nonz": 3138,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary",
+   "precedence"
+  ]
+ },
+ "roi5alpha10n8": {
+  "status": "easy",
+  "vars": 106150,
+  "bin": 105950,
+  "int": 0,
+  "cont": 200,
+  "rows": 4665,
+  "nonz": 2370224,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "cardinality",
+   "decomposition",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos-1122047": {
+  "status": "easy",
+  "vars": 5100,
+  "bin": 100,
+  "int": 0,
+  "cont": 5000,
+  "rows": 57791,
+  "nonz": 163640,
+  "group": "neos-pseudoapplication-46",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "pk1": {
+  "status": "easy",
+  "vars": 86,
+  "bin": 55,
+  "int": 0,
+  "cont": 31,
+  "rows": 45,
+  "nonz": 915,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence"
+  ]
+ },
+ "n5-3": {
+  "status": "easy",
+  "vars": 2550,
+  "bin": 0,
+  "int": 150,
+  "cont": 2400,
+  "rows": 1062,
+  "nonz": 9900,
+  "group": "nxy-z",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "mixed_binary"
+  ]
+ },
+ "fiball": {
+  "status": "easy",
+  "vars": 34219,
+  "bin": 33960,
+  "int": 258,
+  "cont": 1,
+  "rows": 3707,
+  "nonz": 104792,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "CMS750_4": {
+  "status": "easy",
+  "vars": 11697,
+  "bin": 7196,
+  "int": 0,
+  "cont": 4501,
+  "rows": 16381,
+  "nonz": 44903,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence"
+  ]
+ },
+ "neos859080": {
+  "status": "easy",
+  "vars": 160,
+  "bin": 80,
+  "int": 80,
+  "cont": 0,
+  "rows": 164,
+  "nonz": 1280,
+  "group": "neos-pseudoapplication-96",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "infeasible",
+   "variable_bound"
+  ]
+ },
+ "neos-787933": {
+  "status": "easy",
+  "vars": 236376,
+  "bin": 236376,
+  "int": 0,
+  "cont": 0,
+  "rows": 1897,
+  "nonz": 298320,
+  "group": "neos-pseudoapplication-36",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "decomposition",
+   "mixed_binary"
+  ]
+ },
+ "air05": {
+  "status": "easy",
+  "vars": 7195,
+  "bin": 7195,
+  "int": 0,
+  "cont": 0,
+  "rows": 426,
+  "nonz": 52121,
+  "group": "air",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_partitioning"
+  ]
+ },
+ "blp-ic98": {
+  "status": "easy",
+  "vars": 13640,
+  "bin": 13550,
+  "int": 0,
+  "cont": 90,
+  "rows": 717,
+  "nonz": 191947,
+  "group": "blp",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "mixed_binary",
+   "set_packing"
+  ]
+ },
+ "mzzv42z": {
+  "status": "easy",
+  "vars": 11717,
+  "bin": 11482,
+  "int": 235,
+  "cont": 0,
+  "rows": 10460,
+  "nonz": 151261,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "general_linear",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "nu25-pr12": {
+  "status": "easy",
+  "vars": 5868,
+  "bin": 5832,
+  "int": 36,
+  "cont": 0,
+  "rows": 2313,
+  "nonz": 17712,
+  "group": "nus-prxy",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "general_linear",
+   "variable_bound"
+  ]
+ },
+ "neos-911970": {
+  "status": "easy",
+  "vars": 888,
+  "bin": 840,
+  "int": 0,
+  "cont": 48,
+  "rows": 107,
+  "nonz": 3408,
+  "group": "neos-pseudoapplication-70",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_covering",
+   "set_partitioning"
+  ]
+ },
+ "irp": {
+  "status": "easy",
+  "vars": 20315,
+  "bin": 20315,
+  "int": 0,
+  "cont": 0,
+  "rows": 39,
+  "nonz": 98254,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_partitioning"
+  ]
+ },
+ "seymour1": {
+  "status": "easy",
+  "vars": 1372,
+  "bin": 451,
+  "int": 0,
+  "cont": 921,
+  "rows": 4944,
+  "nonz": 33549,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "h80x6320d": {
+  "status": "easy",
+  "vars": 12640,
+  "bin": 6320,
+  "int": 0,
+  "cont": 6320,
+  "rows": 6558,
+  "nonz": 31521,
+  "group": "fixed-cost-network-flow",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-848589": {
+  "status": "easy",
+  "vars": 550539,
+  "bin": 747,
+  "int": 0,
+  "cont": 549792,
+  "rows": 1484,
+  "nonz": 1101078,
+  "group": "neos-pseudoapplication-77",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "mixed_binary"
+  ]
+ },
+ "neos-1456979": {
+  "status": "easy",
+  "vars": 4605,
+  "bin": 4245,
+  "int": 180,
+  "cont": 180,
+  "rows": 6770,
+  "nonz": 36440,
+  "group": "neos-pseudoapplication-102",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "general_linear",
+   "knapsack",
+   "mixed_binary",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "p200x1188c": {
+  "status": "easy",
+  "vars": 2376,
+  "bin": 1188,
+  "int": 0,
+  "cont": 1188,
+  "rows": 1388,
+  "nonz": 4752,
+  "group": "pr_product",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "b1c1s1": {
+  "status": "easy",
+  "vars": 3872,
+  "bin": 288,
+  "int": 0,
+  "cont": 3584,
+  "rows": 3904,
+  "nonz": 11408,
+  "group": "c1s1",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "markshare2": {
+  "status": "hard",
+  "vars": 74,
+  "bin": 60,
+  "int": 0,
+  "cont": 14,
+  "rows": 7,
+  "nonz": 434,
+  "group": "markshare",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "integer_knapsack"
+  ]
+ },
+ "mas74": {
+  "status": "easy",
+  "vars": 151,
+  "bin": 150,
+  "int": 0,
+  "cont": 1,
+  "rows": 13,
+  "nonz": 1706,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary"
+  ]
+ },
+ "nexp-150-20-8-5": {
+  "status": "easy",
+  "vars": 20115,
+  "bin": 17880,
+  "int": 0,
+  "cont": 2235,
+  "rows": 4620,
+  "nonz": 42465,
+  "group": "exp_and_fc",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_packing"
+  ]
+ },
+ "rd-rplusc-21": {
+  "status": "easy",
+  "vars": 622,
+  "bin": 457,
+  "int": 0,
+  "cont": 165,
+  "rows": 125899,
+  "nonz": 852384,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "exp-1-500-5-5": {
+  "status": "easy",
+  "vars": 990,
+  "bin": 250,
+  "int": 0,
+  "cont": 740,
+  "rows": 550,
+  "nonz": 1980,
+  "group": "exp_and_fc",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "markshare_4_0": {
+  "status": "easy",
+  "vars": 34,
+  "bin": 30,
+  "int": 0,
+  "cont": 4,
+  "rows": 4,
+  "nonz": 123,
+  "group": "markshare",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "integer_knapsack"
+  ]
+ },
+ "qap10": {
+  "status": "easy",
+  "vars": 4150,
+  "bin": 4150,
+  "int": 0,
+  "cont": 0,
+  "rows": 1820,
+  "nonz": 18200,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_partitioning"
+  ]
+ },
+ "cost266-UUE": {
+  "status": "easy",
+  "vars": 4161,
+  "bin": 171,
+  "int": 0,
+  "cont": 3990,
+  "rows": 1446,
+  "nonz": 12312,
+  "group": "network_design",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "set_packing"
+  ]
+ },
+ "neos-873061": {
+  "status": "easy",
+  "vars": 175288,
+  "bin": 87644,
+  "int": 0,
+  "cont": 87644,
+  "rows": 93360,
+  "nonz": 350576,
+  "group": "neos-pseudoapplication-61",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "mas76": {
+  "status": "easy",
+  "vars": 151,
+  "bin": 150,
+  "int": 0,
+  "cont": 1,
+  "rows": 12,
+  "nonz": 1640,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary"
+  ]
+ },
+ "neos8": {
+  "status": "easy",
+  "vars": 23228,
+  "bin": 23224,
+  "int": 4,
+  "cont": 0,
+  "rows": 46324,
+  "nonz": 313180,
+  "group": "neos-pseudoapplication-15",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "cardinality",
+   "general_linear",
+   "invariant_knapsack",
+   "precedence",
+   "set_packing"
+  ]
+ },
+ "sp98ar": {
+  "status": "easy",
+  "vars": 15085,
+  "bin": 15085,
+  "int": 0,
+  "cont": 0,
+  "rows": 1435,
+  "nonz": 426148,
+  "group": "sp9",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "mixed_binary",
+   "set_covering",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "neos-860300": {
+  "status": "easy",
+  "vars": 1385,
+  "bin": 1384,
+  "int": 0,
+  "cont": 1,
+  "rows": 850,
+  "nonz": 384329,
+  "group": "neos-pseudoapplication-23",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "invariant_knapsack",
+   "set_covering",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "neos-1445765": {
+  "status": "easy",
+  "vars": 20617,
+  "bin": 2150,
+  "int": 0,
+  "cont": 18467,
+  "rows": 2147,
+  "nonz": 40230,
+  "group": "neos-pseudoapplication-88",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary"
+  ]
+ },
+ "tr12-30": {
+  "status": "easy",
+  "vars": 1080,
+  "bin": 360,
+  "int": 0,
+  "cont": 720,
+  "rows": 750,
+  "nonz": 2508,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos5": {
+  "status": "easy",
+  "vars": 63,
+  "bin": 53,
+  "int": 0,
+  "cont": 10,
+  "rows": 63,
+  "nonz": 2016,
+  "group": "neos-pseudoapplication-21",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary"
+  ]
+ },
+ "neos-1171448": {
+  "status": "easy",
+  "vars": 4914,
+  "bin": 2457,
+  "int": 0,
+  "cont": 2457,
+  "rows": 13206,
+  "nonz": 131859,
+  "group": "neos-pseudoapplication-8",
+  "tags": [
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "icir97_tension": {
+  "status": "easy",
+  "vars": 2494,
+  "bin": 262,
+  "int": 573,
+  "cont": 1659,
+  "rows": 1203,
+  "nonz": 22333,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary"
+  ]
+ },
+ "neos-960392": {
+  "status": "easy",
+  "vars": 59376,
+  "bin": 59376,
+  "int": 0,
+  "cont": 0,
+  "rows": 4744,
+  "nonz": 189503,
+  "group": "neos-pseudoapplication-94",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "invariant_knapsack",
+   "knapsack",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "enlight_hard": {
+  "status": "easy",
+  "vars": 200,
+  "bin": 100,
+  "int": 100,
+  "cont": 0,
+  "rows": 100,
+  "nonz": 560,
+  "group": "enlight",
+  "tags": [
+   "benchmark_suitable",
+   "equation_knapsack",
+   "general_linear"
+  ]
+ },
+ "swath3": {
+  "status": "easy",
+  "vars": 6805,
+  "bin": 2706,
+  "int": 0,
+  "cont": 4099,
+  "rows": 884,
+  "nonz": 34965,
+  "group": "swath",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary"
+  ]
+ },
+ "sp150x300d": {
+  "status": "easy",
+  "vars": 600,
+  "bin": 300,
+  "int": 0,
+  "cont": 300,
+  "rows": 450,
+  "nonz": 1200,
+  "group": "sp_product",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "mik-250-20-75-4": {
+  "status": "easy",
+  "vars": 270,
+  "bin": 75,
+  "int": 175,
+  "cont": 20,
+  "rows": 195,
+  "nonz": 9270,
+  "group": "mik_250",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear"
+  ]
+ },
+ "dano3_3": {
+  "status": "easy",
+  "vars": 13873,
+  "bin": 69,
+  "int": 0,
+  "cont": 13804,
+  "rows": 3202,
+  "nonz": 79655,
+  "group": "dano",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos-827175": {
+  "status": "easy",
+  "vars": 32504,
+  "bin": 21350,
+  "int": 0,
+  "cont": 11154,
+  "rows": 14187,
+  "nonz": 110790,
+  "group": "neos-pseudoapplication-87",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binpacking",
+   "cardinality",
+   "decomposition",
+   "general_linear",
+   "mixed_binary",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "neos-1582420": {
+  "status": "easy",
+  "vars": 10100,
+  "bin": 10000,
+  "int": 100,
+  "cont": 0,
+  "rows": 10180,
+  "nonz": 24814,
+  "group": "neos-pseudoapplication-10",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "integer_knapsack",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "fast0507": {
+  "status": "easy",
+  "vars": 63009,
+  "bin": 63009,
+  "int": 0,
+  "cont": 0,
+  "rows": 507,
+  "nonz": 409349,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "neos-950242": {
+  "status": "easy",
+  "vars": 5760,
+  "bin": 5520,
+  "int": 240,
+  "cont": 0,
+  "rows": 34224,
+  "nonz": 104160,
+  "group": "neos-pseudoapplication-72",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "invariant_knapsack",
+   "precedence",
+   "set_covering",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-662469": {
+  "status": "easy",
+  "vars": 18235,
+  "bin": 17907,
+  "int": 328,
+  "cont": 0,
+  "rows": 1085,
+  "nonz": 200055,
+  "group": "neos-pseudoapplication-73",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "general_linear",
+   "integer_knapsack",
+   "knapsack",
+   "set_covering",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "dano3_5": {
+  "status": "easy",
+  "vars": 13873,
+  "bin": 115,
+  "int": 0,
+  "cont": 13758,
+  "rows": 3202,
+  "nonz": 79655,
+  "group": "dano",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos-957323": {
+  "status": "easy",
+  "vars": 57756,
+  "bin": 57756,
+  "int": 0,
+  "cont": 0,
+  "rows": 3757,
+  "nonz": 499656,
+  "group": "neos-pseudoapplication-48",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "invariant_knapsack",
+   "knapsack",
+   "precedence",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "neos17": {
+  "status": "easy",
+  "vars": 535,
+  "bin": 300,
+  "int": 0,
+  "cont": 235,
+  "rows": 486,
+  "nonz": 4931,
+  "group": "neos-pseudoapplication-66",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary"
+  ]
+ },
+ "trento1": {
+  "status": "easy",
+  "vars": 7687,
+  "bin": 6415,
+  "int": 0,
+  "cont": 1272,
+  "rows": 1265,
+  "nonz": 93571,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary"
+  ]
+ },
+ "nw04": {
+  "status": "easy",
+  "vars": 87482,
+  "bin": 87482,
+  "int": 0,
+  "cont": 0,
+  "rows": 36,
+  "nonz": 636666,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_partitioning"
+  ]
+ },
+ "swath1": {
+  "status": "easy",
+  "vars": 6805,
+  "bin": 2306,
+  "int": 0,
+  "cont": 4499,
+  "rows": 884,
+  "nonz": 34965,
+  "group": "swath",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary"
+  ]
+ },
+ "neos-1354092": {
+  "status": "easy",
+  "vars": 13702,
+  "bin": 13282,
+  "int": 420,
+  "cont": 0,
+  "rows": 3135,
+  "nonz": 187187,
+  "group": "neos-pseudoapplication-47",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "ns1830653": {
+  "status": "easy",
+  "vars": 1629,
+  "bin": 1458,
+  "int": 0,
+  "cont": 171,
+  "rows": 2932,
+  "nonz": 100933,
+  "group": "neos-pseudoapplication-110",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "var-smallemery-m6j6": {
+  "status": "easy",
+  "vars": 5608,
+  "bin": 5606,
+  "int": 0,
+  "cont": 2,
+  "rows": 13416,
+  "nonz": 850621,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence"
+  ]
+ },
+ "s250r10": {
+  "status": "easy",
+  "vars": 273142,
+  "bin": 273139,
+  "int": 0,
+  "cont": 3,
+  "rows": 10962,
+  "nonz": 1318607,
+  "group": "Spinoza",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "mzzv11": {
+  "status": "easy",
+  "vars": 10240,
+  "bin": 9989,
+  "int": 251,
+  "cont": 0,
+  "rows": 9499,
+  "nonz": 134603,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "general_linear",
+   "invariant_knapsack",
+   "knapsack",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "netdiversion": {
+  "status": "easy",
+  "vars": 129180,
+  "bin": 129180,
+  "int": 0,
+  "cont": 0,
+  "rows": 119589,
+  "nonz": 615282,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "cardinality",
+   "invariant_knapsack",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "cbs-cta": {
+  "status": "easy",
+  "vars": 24793,
+  "bin": 2467,
+  "int": 0,
+  "cont": 22326,
+  "rows": 10112,
+  "nonz": 64388,
+  "group": "cta",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos-933966": {
+  "status": "easy",
+  "vars": 31762,
+  "bin": 27982,
+  "int": 0,
+  "cont": 3780,
+  "rows": 12047,
+  "nonz": 180618,
+  "group": "neos-pseudoapplication-34",
+  "tags": [
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "mushroom-best": {
+  "status": "easy",
+  "vars": 8468,
+  "bin": 8237,
+  "int": 118,
+  "cont": 113,
+  "rows": 8580,
+  "nonz": 188735,
+  "group": "ustun",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "variable_bound"
+  ]
+ },
+ "sct2": {
+  "status": "easy",
+  "vars": 5885,
+  "bin": 2872,
+  "int": 0,
+  "cont": 3013,
+  "rows": 2151,
+  "nonz": 23643,
+  "group": "sct",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence"
+  ]
+ },
+ "sorrell3": {
+  "status": "easy",
+  "vars": 1024,
+  "bin": 1024,
+  "int": 0,
+  "cont": 0,
+  "rows": 169162,
+  "nonz": 338324,
+  "group": "independentset",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "variable_bound"
+  ]
+ },
+ "bnatt400": {
+  "status": "easy",
+  "vars": 3600,
+  "bin": 3600,
+  "int": 0,
+  "cont": 0,
+  "rows": 5614,
+  "nonz": 21698,
+  "group": "bnatt",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "invariant_knapsack",
+   "knapsack",
+   "precedence",
+   "set_covering"
+  ]
+ },
+ "tbfp-network": {
+  "status": "easy",
+  "vars": 72747,
+  "bin": 72747,
+  "int": 0,
+  "cont": 0,
+  "rows": 2436,
+  "nonz": 215837,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "cardinality",
+   "set_partitioning"
+  ]
+ },
+ "glass-sc": {
+  "status": "easy",
+  "vars": 214,
+  "bin": 214,
+  "int": 0,
+  "cont": 0,
+  "rows": 6119,
+  "nonz": 63918,
+  "group": "maxfeassub",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_covering"
+  ]
+ },
+ "physiciansched6-2": {
+  "status": "easy",
+  "vars": 111827,
+  "bin": 109346,
+  "int": 0,
+  "cont": 2481,
+  "rows": 168336,
+  "nonz": 480259,
+  "group": "physiciansched",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "decomposition",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "physiciansched3-3": {
+  "status": "easy",
+  "vars": 79555,
+  "bin": 72141,
+  "int": 0,
+  "cont": 7414,
+  "rows": 266227,
+  "nonz": 1062479,
+  "group": "physiciansched",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "decomposition",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "ex9": {
+  "status": "easy",
+  "vars": 10404,
+  "bin": 0,
+  "int": 10404,
+  "cont": 0,
+  "rows": 40962,
+  "nonz": 517112,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "invariant_knapsack",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "buildingenergy": {
+  "status": "easy",
+  "vars": 154978,
+  "bin": 0,
+  "int": 26287,
+  "cont": 128691,
+  "rows": 277594,
+  "nonz": 788969,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "momentum1": {
+  "status": "easy",
+  "vars": 5174,
+  "bin": 2349,
+  "int": 0,
+  "cont": 2825,
+  "rows": 42680,
+  "nonz": 103191,
+  "group": "momentum",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "rocI-4-11": {
+  "status": "easy",
+  "vars": 6839,
+  "bin": 5192,
+  "int": 1016,
+  "cont": 631,
+  "rows": 10883,
+  "nonz": 27383,
+  "group": "rocI",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "rocII-5-11": {
+  "status": "easy",
+  "vars": 11523,
+  "bin": 11341,
+  "int": 0,
+  "cont": 182,
+  "rows": 26897,
+  "nonz": 303291,
+  "group": "rocI",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "ns1760995": {
+  "status": "easy",
+  "vars": 17956,
+  "bin": 17822,
+  "int": 0,
+  "cont": 134,
+  "rows": 615388,
+  "nonz": 1854012,
+  "group": "neos-pseudoapplication-12",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-5107597-kakapo": {
+  "status": "easy",
+  "vars": 3114,
+  "bin": 2976,
+  "int": 0,
+  "cont": 138,
+  "rows": 6498,
+  "nonz": 19392,
+  "group": "neos-pseudoapplication-54",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence"
+  ]
+ },
+ "neos-4532248-waihi": {
+  "status": "easy",
+  "vars": 86842,
+  "bin": 86841,
+  "int": 0,
+  "cont": 1,
+  "rows": 167322,
+  "nonz": 525339,
+  "group": "neos-pseudoapplication-6",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binpacking",
+   "cardinality",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "neos-4954672-berkel": {
+  "status": "easy",
+  "vars": 1533,
+  "bin": 630,
+  "int": 0,
+  "cont": 903,
+  "rows": 1848,
+  "nonz": 8007,
+  "group": "neos-pseudoapplication-43",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos-3024952-loue": {
+  "status": "easy",
+  "vars": 3255,
+  "bin": 0,
+  "int": 3255,
+  "cont": 0,
+  "rows": 3705,
+  "nonz": 17310,
+  "group": "neos-pseudoapplication-86",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "integer_knapsack",
+   "precedence"
+  ]
+ },
+ "neos-4738912-atrato": {
+  "status": "easy",
+  "vars": 6216,
+  "bin": 1120,
+  "int": 5096,
+  "cont": 0,
+  "rows": 1947,
+  "nonz": 19521,
+  "group": "neos-pseudoapplication-37",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "integer_knapsack",
+   "knapsack",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-4300652-rahue": {
+  "status": "easy",
+  "vars": 33003,
+  "bin": 20900,
+  "int": 0,
+  "cont": 12103,
+  "rows": 76992,
+  "nonz": 183616,
+  "group": "neos-pseudoapplication-13",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-3656078-kumeu": {
+  "status": "easy",
+  "vars": 14870,
+  "bin": 9755,
+  "int": 4455,
+  "cont": 660,
+  "rows": 17656,
+  "nonz": 59292,
+  "group": "neos-pseudoapplication-44",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "general_linear",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "neos-4722843-widden": {
+  "status": "easy",
+  "vars": 77723,
+  "bin": 73349,
+  "int": 20,
+  "cont": 4354,
+  "rows": 113555,
+  "nonz": 311529,
+  "group": "neos-pseudoapplication-30",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binpacking",
+   "general_linear",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-5114902-kasavu": {
+  "status": "easy",
+  "vars": 710164,
+  "bin": 14560,
+  "int": 0,
+  "cont": 695604,
+  "rows": 961170,
+  "nonz": 4240376,
+  "group": "neos-pseudoapplication-104",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "invariant_knapsack",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos-2978193-inde": {
+  "status": "easy",
+  "vars": 20800,
+  "bin": 64,
+  "int": 0,
+  "cont": 20736,
+  "rows": 396,
+  "nonz": 41600,
+  "group": "neos-pseudoapplication-5",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "mixed_binary"
+  ]
+ },
+ "neos-5188808-nattai": {
+  "status": "easy",
+  "vars": 14544,
+  "bin": 288,
+  "int": 0,
+  "cont": 14256,
+  "rows": 29452,
+  "nonz": 133686,
+  "group": "neos-pseudoapplication-98",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-4387871-tavua": {
+  "status": "easy",
+  "vars": 4004,
+  "bin": 2000,
+  "int": 0,
+  "cont": 2004,
+  "rows": 4554,
+  "nonz": 23496,
+  "group": "neos-pseudoapplication-58",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos-3083819-nubu": {
+  "status": "easy",
+  "vars": 8644,
+  "bin": 0,
+  "int": 8644,
+  "cont": 0,
+  "rows": 4725,
+  "nonz": 24048,
+  "group": "neos-pseudoapplication-31",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "integer_knapsack"
+  ]
+ },
+ "neos-5104907-jarama": {
+  "status": "easy",
+  "vars": 345856,
+  "bin": 9520,
+  "int": 0,
+  "cont": 336336,
+  "rows": 489818,
+  "nonz": 2053548,
+  "group": "neos-pseudoapplication-24",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "invariant_knapsack",
+   "mixed_binary",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-4338804-snowy": {
+  "status": "easy",
+  "vars": 1344,
+  "bin": 1260,
+  "int": 42,
+  "cont": 42,
+  "rows": 1701,
+  "nonz": 6342,
+  "group": "neos-pseudoapplication-40",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary",
+   "precedence",
+   "set_covering"
+  ]
+ },
+ "neos-5093327-huahum": {
+  "status": "easy",
+  "vars": 40640,
+  "bin": 64,
+  "int": 0,
+  "cont": 40576,
+  "rows": 51840,
+  "nonz": 784768,
+  "group": "neos-pseudoapplication-17",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary"
+  ]
+ },
+ "neos-2657525-crna": {
+  "status": "easy",
+  "vars": 524,
+  "bin": 146,
+  "int": 378,
+  "cont": 0,
+  "rows": 342,
+  "nonz": 1690,
+  "group": "neos-pseudoapplication-7",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "integer_knapsack",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-2987310-joes": {
+  "status": "easy",
+  "vars": 27837,
+  "bin": 3051,
+  "int": 0,
+  "cont": 24786,
+  "rows": 29015,
+  "nonz": 580291,
+  "group": "neos-pseudoapplication-82",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence"
+  ]
+ },
+ "neos-3381206-awhea": {
+  "status": "easy",
+  "vars": 2375,
+  "bin": 475,
+  "int": 1900,
+  "cont": 0,
+  "rows": 479,
+  "nonz": 4275,
+  "group": "neos-pseudoapplication-105",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "integer_knapsack"
+  ]
+ },
+ "neos-2746589-doon": {
+  "status": "easy",
+  "vars": 50936,
+  "bin": 50704,
+  "int": 224,
+  "cont": 8,
+  "rows": 31530,
+  "nonz": 271072,
+  "group": "neos-pseudoapplication-52",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "general_linear",
+   "mixed_binary",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-5052403-cygnet": {
+  "status": "easy",
+  "vars": 32868,
+  "bin": 32868,
+  "int": 0,
+  "cont": 0,
+  "rows": 38268,
+  "nonz": 4898304,
+  "group": "neos-pseudoapplication-100",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "invariant_knapsack",
+   "set_covering"
+  ]
+ },
+ "neos-4413714-turia": {
+  "status": "easy",
+  "vars": 190402,
+  "bin": 190201,
+  "int": 0,
+  "cont": 201,
+  "rows": 2303,
+  "nonz": 761756,
+  "group": "neos-pseudoapplication-67",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "mixed_binary",
+   "set_partitioning"
+  ]
+ },
+ "neos-3402294-bobin": {
+  "status": "easy",
+  "vars": 2904,
+  "bin": 2616,
+  "int": 0,
+  "cont": 288,
+  "rows": 591076,
+  "nonz": 2034888,
+  "group": "neos-pseudoapplication-71",
+  "tags": [
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "set_partitioning"
+  ]
+ },
+ "neos-5049753-cuanza": {
+  "status": "easy",
+  "vars": 242736,
+  "bin": 8304,
+  "int": 0,
+  "cont": 234432,
+  "rows": 322248,
+  "nonz": 1440672,
+  "group": "neos-pseudoapplication-85",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "invariant_knapsack",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos-3627168-kasai": {
+  "status": "easy",
+  "vars": 1462,
+  "bin": 535,
+  "int": 0,
+  "cont": 927,
+  "rows": 1655,
+  "nonz": 5158,
+  "group": "neos-pseudoapplication-25",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "invariant_knapsack",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos-3216931-puriri": {
+  "status": "easy",
+  "vars": 3555,
+  "bin": 3268,
+  "int": 0,
+  "cont": 287,
+  "rows": 5989,
+  "nonz": 91691,
+  "group": "neos-pseudoapplication-56",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binpacking",
+   "cardinality",
+   "general_linear",
+   "invariant_knapsack",
+   "knapsack",
+   "set_covering",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-3046615-murg": {
+  "status": "easy",
+  "vars": 274,
+  "bin": 240,
+  "int": 16,
+  "cont": 18,
+  "rows": 498,
+  "nonz": 1266,
+  "group": "neos-pseudoapplication-90",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "neos-3754480-nidda": {
+  "status": "easy",
+  "vars": 253,
+  "bin": 50,
+  "int": 0,
+  "cont": 203,
+  "rows": 402,
+  "nonz": 1488,
+  "group": "neos-pseudoapplication-107",
+  "tags": [
+   "benchmark_suitable",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "neos-5195221-niemur": {
+  "status": "easy",
+  "vars": 14546,
+  "bin": 9792,
+  "int": 0,
+  "cont": 4754,
+  "rows": 42256,
+  "nonz": 176586,
+  "group": "neos-pseudoapplication-32",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-3402454-bohle": {
+  "status": "hard",
+  "vars": 2904,
+  "bin": 2616,
+  "int": 0,
+  "cont": 288,
+  "rows": 2897380,
+  "nonz": 8953800,
+  "group": "neos-pseudoapplication-4",
+  "tags": [
+   "benchmark_suitable",
+   "infeasible",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "set_partitioning"
+  ]
+ },
+ "neos-3004026-krka": {
+  "status": "easy",
+  "vars": 17030,
+  "bin": 16900,
+  "int": 130,
+  "cont": 0,
+  "rows": 12545,
+  "nonz": 41860,
+  "group": "neos-pseudoapplication-38",
+  "tags": [
+   "benchmark_suitable",
+   "feasibility",
+   "general_linear",
+   "set_partitioning"
+  ]
+ },
+ "app1-1": {
+  "status": "easy",
+  "vars": 2480,
+  "bin": 1225,
+  "int": 0,
+  "cont": 1255,
+  "rows": 4926,
+  "nonz": 18275,
+  "group": "app",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "app1-2": {
+  "status": "easy",
+  "vars": 26871,
+  "bin": 13300,
+  "int": 0,
+  "cont": 13571,
+  "rows": 53467,
+  "nonz": 199175,
+  "group": "app",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "beasleyC3": {
+  "status": "easy",
+  "vars": 2500,
+  "bin": 1250,
+  "int": 0,
+  "cont": 1250,
+  "rows": 1750,
+  "nonz": 5000,
+  "group": "beasley",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "csched008": {
+  "status": "easy",
+  "vars": 1536,
+  "bin": 1284,
+  "int": 0,
+  "cont": 252,
+  "rows": 351,
+  "nonz": 5687,
+  "group": "csched",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "rmatr100-p10": {
+  "status": "easy",
+  "vars": 7359,
+  "bin": 100,
+  "int": 0,
+  "cont": 7259,
+  "rows": 7260,
+  "nonz": 21877,
+  "group": "rmatr",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "mixed_binary"
+  ]
+ },
+ "nursesched-sprint02": {
+  "status": "easy",
+  "vars": 10250,
+  "bin": 10230,
+  "int": 20,
+  "cont": 0,
+  "rows": 3522,
+  "nonz": 204000,
+  "group": "nursescheduling",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "general_linear",
+   "invariant_knapsack",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "nursesched-medium-hint03": {
+  "status": "hard",
+  "vars": 34248,
+  "bin": 34170,
+  "int": 78,
+  "cont": 0,
+  "rows": 14062,
+  "nonz": 622800,
+  "group": "nursescheduling",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "general_linear",
+   "invariant_knapsack",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "sing326": {
+  "status": "easy",
+  "vars": 55156,
+  "bin": 40010,
+  "int": 0,
+  "cont": 15146,
+  "rows": 50781,
+  "nonz": 268173,
+  "group": "sing",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "mixed_binary",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "sing44": {
+  "status": "easy",
+  "vars": 59708,
+  "bin": 43524,
+  "int": 0,
+  "cont": 16184,
+  "rows": 54745,
+  "nonz": 281260,
+  "group": "sing",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "mixed_binary",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "sp97ar": {
+  "status": "easy",
+  "vars": 14101,
+  "bin": 14101,
+  "int": 0,
+  "cont": 0,
+  "rows": 1761,
+  "nonz": 290968,
+  "group": "sp9",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "mixed_binary",
+   "set_covering",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "thor50dday": {
+  "status": "easy",
+  "vars": 106261,
+  "bin": 53131,
+  "int": 0,
+  "cont": 53130,
+  "rows": 53360,
+  "nonz": 212060,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "atlanta-ip": {
+  "status": "easy",
+  "vars": 48738,
+  "bin": 46667,
+  "int": 106,
+  "cont": 1965,
+  "rows": 21732,
+  "nonz": 257532,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binpacking",
+   "cardinality",
+   "general_linear",
+   "integer_knapsack",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "graph20-20-1rand": {
+  "status": "easy",
+  "vars": 2183,
+  "bin": 2183,
+  "int": 0,
+  "cont": 0,
+  "rows": 5587,
+  "nonz": 19277,
+  "group": "graphs",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "decomposition",
+   "invariant_knapsack",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "wachplan": {
+  "status": "easy",
+  "vars": 3361,
+  "bin": 3360,
+  "int": 1,
+  "cont": 0,
+  "rows": 1553,
+  "nonz": 89361,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "invariant_knapsack",
+   "mixed_binary",
+   "set_covering",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "supportcase42": {
+  "status": "easy",
+  "vars": 19466,
+  "bin": 0,
+  "int": 1026,
+  "cont": 18440,
+  "rows": 18439,
+  "nonz": 435653,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "decomp2": {
+  "status": "easy",
+  "vars": 14387,
+  "bin": 14387,
+  "int": 0,
+  "cont": 0,
+  "rows": 10765,
+  "nonz": 64073,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "decomposition",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "highschool1-aigio": {
+  "status": "easy",
+  "vars": 320404,
+  "bin": 319686,
+  "int": 718,
+  "cont": 0,
+  "rows": 92568,
+  "nonz": 1562168,
+  "group": "timetabling",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "equation_knapsack",
+   "general_linear",
+   "invariant_knapsack",
+   "set_covering",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "brazil3": {
+  "status": "easy",
+  "vars": 23968,
+  "bin": 23874,
+  "int": 94,
+  "cont": 0,
+  "rows": 14646,
+  "nonz": 133184,
+  "group": "timetabling",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "equation_knapsack",
+   "general_linear",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "mad": {
+  "status": "easy",
+  "vars": 220,
+  "bin": 200,
+  "int": 0,
+  "cont": 20,
+  "rows": 51,
+  "nonz": 2808,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "bppc4-08": {
+  "status": "easy",
+  "vars": 1456,
+  "bin": 1454,
+  "int": 0,
+  "cont": 2,
+  "rows": 111,
+  "nonz": 23964,
+  "group": "bppc",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_partitioning"
+  ]
+ },
+ "germanrr": {
+  "status": "easy",
+  "vars": 10813,
+  "bin": 5323,
+  "int": 5251,
+  "cont": 239,
+  "rows": 10779,
+  "nonz": 175547,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "ns1208400": {
+  "status": "easy",
+  "vars": 2883,
+  "bin": 2880,
+  "int": 0,
+  "cont": 3,
+  "rows": 4289,
+  "nonz": 81746,
+  "group": "neos-pseudoapplication-108",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "invariant_knapsack",
+   "mixed_binary",
+   "set_covering",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-1171737": {
+  "status": "easy",
+  "vars": 2340,
+  "bin": 1170,
+  "int": 0,
+  "cont": 1170,
+  "rows": 4179,
+  "nonz": 58620,
+  "group": "neos-pseudoapplication-80",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "eilA101-2": {
+  "status": "easy",
+  "vars": 65832,
+  "bin": 65832,
+  "int": 0,
+  "cont": 0,
+  "rows": 100,
+  "nonz": 959373,
+  "group": "eil",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_partitioning"
+  ]
+ },
+ "glass4": {
+  "status": "easy",
+  "vars": 322,
+  "bin": 302,
+  "int": 0,
+  "cont": 20,
+  "rows": 396,
+  "nonz": 1815,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "gmu-35-50": {
+  "status": "easy",
+  "vars": 1919,
+  "bin": 1914,
+  "int": 0,
+  "cont": 5,
+  "rows": 435,
+  "nonz": 8643,
+  "group": "gmu",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "net12": {
+  "status": "easy",
+  "vars": 14115,
+  "bin": 1603,
+  "int": 0,
+  "cont": 12512,
+  "rows": 14021,
+  "nonz": 80384,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_packing"
+  ]
+ },
+ "30n20b8": {
+  "status": "easy",
+  "vars": 18380,
+  "bin": 18318,
+  "int": 62,
+  "cont": 0,
+  "rows": 576,
+  "nonz": 109706,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "supportcase18": {
+  "status": "easy",
+  "vars": 13410,
+  "bin": 13410,
+  "int": 0,
+  "cont": 0,
+  "rows": 240,
+  "nonz": 28920,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "set_partitioning"
+  ]
+ },
+ "supportcase6": {
+  "status": "easy",
+  "vars": 130052,
+  "bin": 130051,
+  "int": 1,
+  "cont": 0,
+  "rows": 771,
+  "nonz": 584976,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "general_linear",
+   "set_partitioning"
+  ]
+ },
+ "supportcase22": {
+  "status": "open",
+  "vars": 7129,
+  "bin": 7129,
+  "int": 0,
+  "cont": 0,
+  "rows": 260602,
+  "nonz": 2228828,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "invariant_knapsack",
+   "knapsack",
+   "set_covering"
+  ]
+ },
+ "supportcase10": {
+  "status": "easy",
+  "vars": 14770,
+  "bin": 14770,
+  "int": 0,
+  "cont": 0,
+  "rows": 165684,
+  "nonz": 555082,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binary",
+   "invariant_knapsack",
+   "precedence",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "supportcase12": {
+  "status": "easy",
+  "vars": 799616,
+  "bin": 0,
+  "int": 200,
+  "cont": 799416,
+  "rows": 166781,
+  "nonz": 2334437,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "integer_knapsack",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "supportcase26": {
+  "status": "easy",
+  "vars": 436,
+  "bin": 396,
+  "int": 0,
+  "cont": 40,
+  "rows": 870,
+  "nonz": 2492,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence"
+  ]
+ },
+ "supportcase19": {
+  "status": "easy",
+  "vars": 1429098,
+  "bin": 1311292,
+  "int": 117806,
+  "cont": 0,
+  "rows": 10713,
+  "nonz": 4287094,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "set_covering",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "supportcase7": {
+  "status": "easy",
+  "vars": 138844,
+  "bin": 451,
+  "int": 14,
+  "cont": 138379,
+  "rows": 6532,
+  "nonz": 2845545,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "n3div36": {
+  "status": "easy",
+  "vars": 22120,
+  "bin": 22120,
+  "int": 0,
+  "cont": 0,
+  "rows": 4484,
+  "nonz": 340740,
+  "group": "nseq",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "decomposition",
+   "mixed_binary",
+   "set_covering",
+   "set_packing"
+  ]
+ },
+ "cvs16r128-89": {
+  "status": "easy",
+  "vars": 3472,
+  "bin": 3472,
+  "int": 0,
+  "cont": 0,
+  "rows": 4633,
+  "nonz": 12528,
+  "group": "cvs",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "decomposition",
+   "invariant_knapsack",
+   "precedence",
+   "set_packing"
+  ]
+ },
+ "dws008-01": {
+  "status": "easy",
+  "vars": 11096,
+  "bin": 6608,
+  "int": 0,
+  "cont": 4488,
+  "rows": 6064,
+  "nonz": 56400,
+  "group": "dws",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "cmflsp50-24-8-8": {
+  "status": "easy",
+  "vars": 16392,
+  "bin": 1392,
+  "int": 0,
+  "cont": 15000,
+  "rows": 3520,
+  "nonz": 158622,
+  "group": "cmflsp",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "co-100": {
+  "status": "easy",
+  "vars": 48417,
+  "bin": 48417,
+  "int": 0,
+  "cont": 0,
+  "rows": 2187,
+  "nonz": 1995817,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "knapsack",
+   "precedence",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "lectsched-5-obj": {
+  "status": "easy",
+  "vars": 21805,
+  "bin": 21389,
+  "int": 416,
+  "cont": 0,
+  "rows": 38884,
+  "nonz": 239608,
+  "group": "lectsched",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "integer_knapsack",
+   "invariant_knapsack",
+   "precedence",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "rail507": {
+  "status": "easy",
+  "vars": 63019,
+  "bin": 63009,
+  "int": 0,
+  "cont": 10,
+  "rows": 509,
+  "nonz": 468878,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "invariant_knapsack",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "roll3000": {
+  "status": "easy",
+  "vars": 1166,
+  "bin": 246,
+  "int": 492,
+  "cont": 428,
+  "rows": 2295,
+  "nonz": 29386,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "general_linear",
+   "integer_knapsack",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "neos-3555904-turama": {
+  "status": "easy",
+  "vars": 37461,
+  "bin": 37461,
+  "int": 0,
+  "cont": 0,
+  "rows": 146493,
+  "nonz": 793605,
+  "group": "neos-pseudoapplication-81",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binary",
+   "cardinality",
+   "invariant_knapsack",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-4647030-tutaki": {
+  "status": "hard",
+  "vars": 12600,
+  "bin": 7000,
+  "int": 0,
+  "cont": 5600,
+  "rows": 8382,
+  "nonz": 3953388,
+  "group": "neos-pseudoapplication-29",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_packing"
+  ]
+ },
+ "neos-4763324-toguru": {
+  "status": "easy",
+  "vars": 53593,
+  "bin": 53592,
+  "int": 0,
+  "cont": 1,
+  "rows": 106954,
+  "nonz": 266805,
+  "group": "neos-pseudoapplication-106",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "neos-3988577-wolgan": {
+  "status": "easy",
+  "vars": 25870,
+  "bin": 25870,
+  "int": 0,
+  "cont": 0,
+  "rows": 44662,
+  "nonz": 350350,
+  "group": "neos-pseudoapplication-64",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "cardinality",
+   "decomposition",
+   "infeasible",
+   "invariant_knapsack",
+   "knapsack",
+   "precedence",
+   "set_packing"
+  ]
+ },
+ "neos-2075418-temuka": {
+  "status": "easy",
+  "vars": 122304,
+  "bin": 122304,
+  "int": 0,
+  "cont": 0,
+  "rows": 349602,
+  "nonz": 7610261,
+  "group": "neos-pseudoapplication-62",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "infeasible",
+   "invariant_knapsack",
+   "knapsack",
+   "precedence",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "ns1116954": {
+  "status": "easy",
+  "vars": 12648,
+  "bin": 7482,
+  "int": 0,
+  "cont": 5166,
+  "rows": 131991,
+  "nonz": 410582,
+  "group": "neos-pseudoapplication-51",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "cardinality",
+   "feasibility",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "milo-v12-6-r2-40-1": {
+  "status": "easy",
+  "vars": 2688,
+  "bin": 840,
+  "int": 0,
+  "cont": 1848,
+  "rows": 5628,
+  "nonz": 14604,
+  "group": "milo",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "fhnw-binpack4-4": {
+  "status": "easy",
+  "vars": 520,
+  "bin": 481,
+  "int": 0,
+  "cont": 39,
+  "rows": 620,
+  "nonz": 2332,
+  "group": "binpack",
+  "tags": [
+   "benchmark_suitable",
+   "feasibility",
+   "infeasible",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "fhnw-binpack4-48": {
+  "status": "easy",
+  "vars": 3710,
+  "bin": 3605,
+  "int": 0,
+  "cont": 105,
+  "rows": 4480,
+  "nonz": 17290,
+  "group": "binpack",
+  "tags": [
+   "benchmark_suitable",
+   "feasibility",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "splice1k1": {
+  "status": "easy",
+  "vars": 3253,
+  "bin": 3252,
+  "int": 1,
+  "cont": 0,
+  "rows": 6505,
+  "nonz": 1761016,
+  "group": "splice",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "general_linear",
+   "set_covering"
+  ]
+ },
+ "hypothyroid-k1": {
+  "status": "easy",
+  "vars": 2602,
+  "bin": 2601,
+  "int": 1,
+  "cont": 0,
+  "rows": 5195,
+  "nonz": 433884,
+  "group": "hypothyroid",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binpacking",
+   "general_linear",
+   "precedence",
+   "set_covering"
+  ]
+ },
+ "cryptanalysiskb128n5obj16": {
+  "status": "easy",
+  "vars": 48950,
+  "bin": 47830,
+  "int": 1120,
+  "cont": 0,
+  "rows": 98021,
+  "nonz": 292875,
+  "group": "cryptanalysis",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binpacking",
+   "cardinality",
+   "feasibility",
+   "general_linear",
+   "integer_knapsack",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "proteindesign121hz512p9": {
+  "status": "easy",
+  "vars": 159145,
+  "bin": 159054,
+  "int": 91,
+  "cont": 0,
+  "rows": 301,
+  "nonz": 629449,
+  "group": "proteindesign",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "set_partitioning"
+  ]
+ },
+ "gfd-schedulen180f7d50m30k18": {
+  "status": "easy",
+  "vars": 227535,
+  "bin": 192408,
+  "int": 2025,
+  "cont": 33102,
+  "rows": 457985,
+  "nonz": 1233372,
+  "group": "gfd-schedule",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "feasibility",
+   "general_linear",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "k1mushroom": {
+  "status": "easy",
+  "vars": 8211,
+  "bin": 8210,
+  "int": 1,
+  "cont": 0,
+  "rows": 16419,
+  "nonz": 1697946,
+  "group": "k1mushroom",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "general_linear",
+   "set_covering"
+  ]
+ },
+ "cryptanalysiskb128n5obj14": {
+  "status": "easy",
+  "vars": 48950,
+  "bin": 47830,
+  "int": 1120,
+  "cont": 0,
+  "rows": 98021,
+  "nonz": 292875,
+  "group": "cryptanalysis",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binpacking",
+   "cardinality",
+   "feasibility",
+   "general_linear",
+   "infeasible",
+   "integer_knapsack",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "radiationm18-12-05": {
+  "status": "easy",
+  "vars": 40623,
+  "bin": 14688,
+  "int": 11247,
+  "cont": 14688,
+  "rows": 40935,
+  "nonz": 96149,
+  "group": "radiation",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "integer_knapsack",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "traininstance6": {
+  "status": "easy",
+  "vars": 10218,
+  "bin": 4154,
+  "int": 2056,
+  "cont": 4008,
+  "rows": 12309,
+  "nonz": 32785,
+  "group": "traininstance",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "general_linear",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "traininstance2": {
+  "status": "easy",
+  "vars": 12890,
+  "bin": 5278,
+  "int": 2602,
+  "cont": 5010,
+  "rows": 15603,
+  "nonz": 41531,
+  "group": "traininstance",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "general_linear",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "proteindesign122trx11p8": {
+  "status": "easy",
+  "vars": 127326,
+  "bin": 127248,
+  "int": 78,
+  "cont": 0,
+  "rows": 254,
+  "nonz": 503427,
+  "group": "proteindesign",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "set_partitioning"
+  ]
+ },
+ "radiationm40-10-02": {
+  "status": "easy",
+  "vars": 172013,
+  "bin": 62400,
+  "int": 47213,
+  "cont": 62400,
+  "rows": 173603,
+  "nonz": 406825,
+  "group": "radiation",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "integer_knapsack",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "mcsched": {
+  "status": "easy",
+  "vars": 1747,
+  "bin": 1745,
+  "int": 0,
+  "cont": 2,
+  "rows": 2107,
+  "nonz": 8088,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "invariant_knapsack",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "satellites2-60-fs": {
+  "status": "easy",
+  "vars": 35378,
+  "bin": 34324,
+  "int": 0,
+  "cont": 1054,
+  "rows": 16516,
+  "nonz": 125048,
+  "group": "satellites",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "uct-subprob": {
+  "status": "easy",
+  "vars": 2256,
+  "bin": 379,
+  "int": 0,
+  "cont": 1877,
+  "rows": 1973,
+  "nonz": 10147,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "peg-solitaire-a3": {
+  "status": "easy",
+  "vars": 4552,
+  "bin": 4552,
+  "int": 0,
+  "cont": 0,
+  "rows": 4587,
+  "nonz": 28387,
+  "group": "pegsolitaire",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "cardinality",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "cod105": {
+  "status": "easy",
+  "vars": 1024,
+  "bin": 1024,
+  "int": 0,
+  "cont": 0,
+  "rows": 1024,
+  "nonz": 57344,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_packing"
+  ]
+ },
+ "supportcase33": {
+  "status": "easy",
+  "vars": 20203,
+  "bin": 20102,
+  "int": 101,
+  "cont": 0,
+  "rows": 20489,
+  "nonz": 211915,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "general_linear",
+   "integer_knapsack",
+   "invariant_knapsack",
+   "knapsack",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "lotsize": {
+  "status": "easy",
+  "vars": 2985,
+  "bin": 1195,
+  "int": 0,
+  "cont": 1790,
+  "rows": 1920,
+  "nonz": 6565,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "invariant_knapsack",
+   "mixed_binary",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "rail02": {
+  "status": "easy",
+  "vars": 270869,
+  "bin": 270869,
+  "int": 0,
+  "cont": 0,
+  "rows": 95791,
+  "nonz": 756228,
+  "group": "rail0",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binary",
+   "cardinality",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "gmu-35-40": {
+  "status": "easy",
+  "vars": 1205,
+  "bin": 1200,
+  "int": 0,
+  "cont": 5,
+  "rows": 424,
+  "nonz": 4843,
+  "group": "gmu",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "ns1952667": {
+  "status": "easy",
+  "vars": 13264,
+  "bin": 0,
+  "int": 13264,
+  "cont": 0,
+  "rows": 41,
+  "nonz": 335643,
+  "group": "neos-pseudoapplication-78",
+  "tags": [
+   "benchmark_suitable",
+   "feasibility",
+   "general_linear",
+   "integer_knapsack"
+  ]
+ },
+ "seymour": {
+  "status": "easy",
+  "vars": 1372,
+  "bin": 1372,
+  "int": 0,
+  "cont": 0,
+  "rows": 4944,
+  "nonz": 33549,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_covering",
+   "variable_bound"
+  ]
+ },
+ "ex10": {
+  "status": "easy",
+  "vars": 17680,
+  "bin": 0,
+  "int": 17680,
+  "cont": 0,
+  "rows": 69608,
+  "nonz": 1162000,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "invariant_knapsack",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "rococoC10-001000": {
+  "status": "easy",
+  "vars": 3117,
+  "bin": 2993,
+  "int": 124,
+  "cont": 0,
+  "rows": 1293,
+  "nonz": 11751,
+  "group": "rococo",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "general_linear",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "irish-electricity": {
+  "status": "easy",
+  "vars": 61728,
+  "bin": 9888,
+  "int": 0,
+  "cont": 51840,
+  "rows": 104259,
+  "nonz": 523257,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "binpacking",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "n2seq36q": {
+  "status": "easy",
+  "vars": 22480,
+  "bin": 22480,
+  "int": 0,
+  "cont": 0,
+  "rows": 2565,
+  "nonz": 183292,
+  "group": "nseq",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "invariant_knapsack",
+   "knapsack",
+   "set_covering",
+   "set_packing"
+  ]
+ },
+ "triptim1": {
+  "status": "easy",
+  "vars": 30055,
+  "bin": 20456,
+  "int": 9592,
+  "cont": 7,
+  "rows": 15706,
+  "nonz": 515436,
+  "group": "triptim",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "invariant_knapsack",
+   "precedence",
+   "set_covering",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "piperout-08": {
+  "status": "easy",
+  "vars": 10399,
+  "bin": 10245,
+  "int": 130,
+  "cont": 24,
+  "rows": 14589,
+  "nonz": 44959,
+  "group": "piperout",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "equation_knapsack",
+   "general_linear",
+   "integer_knapsack",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "piperout-27": {
+  "status": "easy",
+  "vars": 11659,
+  "bin": 11514,
+  "int": 121,
+  "cont": 24,
+  "rows": 18442,
+  "nonz": 54662,
+  "group": "piperout",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "equation_knapsack",
+   "general_linear",
+   "integer_knapsack",
+   "invariant_knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_covering",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "unitcal_7": {
+  "status": "easy",
+  "vars": 25755,
+  "bin": 2856,
+  "int": 0,
+  "cont": 22899,
+  "rows": 48939,
+  "nonz": 127595,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "bnatt500": {
+  "status": "easy",
+  "vars": 4500,
+  "bin": 4500,
+  "int": 0,
+  "cont": 0,
+  "rows": 7029,
+  "nonz": 27203,
+  "group": "bnatt",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "infeasible",
+   "invariant_knapsack",
+   "knapsack",
+   "precedence",
+   "set_covering"
+  ]
+ },
+ "fastxgemm-n2r6s0t2": {
+  "status": "easy",
+  "vars": 784,
+  "bin": 48,
+  "int": 0,
+  "cont": 736,
+  "rows": 5998,
+  "nonz": 19376,
+  "group": "fastxgemm",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "general_linear",
+   "mixed_binary",
+   "set_covering",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "mc11": {
+  "status": "easy",
+  "vars": 3040,
+  "bin": 1520,
+  "int": 0,
+  "cont": 1520,
+  "rows": 1920,
+  "nonz": 6080,
+  "group": "mc",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "graphdraw-domain": {
+  "status": "easy",
+  "vars": 254,
+  "bin": 180,
+  "int": 20,
+  "cont": 54,
+  "rows": 865,
+  "nonz": 2600,
+  "group": "graphdraw",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "invariant_knapsack",
+   "mixed_binary",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "s100": {
+  "status": "hard",
+  "vars": 364417,
+  "bin": 364417,
+  "int": 0,
+  "cont": 0,
+  "rows": 14733,
+  "nonz": 1777917,
+  "group": "Spinoza",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binary",
+   "cardinality",
+   "invariant_knapsack",
+   "knapsack",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "opm2-z10-s4": {
+  "status": "easy",
+  "vars": 6250,
+  "bin": 6250,
+  "int": 0,
+  "cont": 0,
+  "rows": 160633,
+  "nonz": 371240,
+  "group": "opm2",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "knapsack",
+   "precedence"
+  ]
+ },
+ "timtab1": {
+  "status": "easy",
+  "vars": 397,
+  "bin": 77,
+  "int": 94,
+  "cont": 226,
+  "rows": 171,
+  "nonz": 829,
+  "group": "timtab",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary"
+  ]
+ },
+ "square47": {
+  "status": "easy",
+  "vars": 95030,
+  "bin": 94987,
+  "int": 43,
+  "cont": 0,
+  "rows": 61591,
+  "nonz": 27329856,
+  "group": "square",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "set_partitioning"
+  ]
+ },
+ "square41": {
+  "status": "easy",
+  "vars": 62234,
+  "bin": 62197,
+  "int": 37,
+  "cont": 0,
+  "rows": 40160,
+  "nonz": 13566426,
+  "group": "square",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "set_partitioning"
+  ]
+ },
+ "rail01": {
+  "status": "easy",
+  "vars": 117527,
+  "bin": 117527,
+  "int": 0,
+  "cont": 0,
+  "rows": 46843,
+  "nonz": 392086,
+  "group": "rail0",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binary",
+   "cardinality",
+   "knapsack",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "pg": {
+  "status": "easy",
+  "vars": 2700,
+  "bin": 100,
+  "int": 0,
+  "cont": 2600,
+  "rows": 125,
+  "nonz": 5200,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary"
+  ]
+ },
+ "csched007": {
+  "status": "easy",
+  "vars": 1758,
+  "bin": 1457,
+  "int": 0,
+  "cont": 301,
+  "rows": 351,
+  "nonz": 6379,
+  "group": "csched",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "rococoB10-011000": {
+  "status": "easy",
+  "vars": 4456,
+  "bin": 4320,
+  "int": 136,
+  "cont": 0,
+  "rows": 1667,
+  "nonz": 16517,
+  "group": "rococo",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "decomposition",
+   "general_linear",
+   "precedence",
+   "set_partitioning"
+  ]
+ },
+ "uccase9": {
+  "status": "easy",
+  "vars": 33242,
+  "bin": 8064,
+  "int": 0,
+  "cont": 25178,
+  "rows": 49565,
+  "nonz": 332316,
+  "group": "uccase",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binpacking",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "uccase12": {
+  "status": "easy",
+  "vars": 62529,
+  "bin": 9072,
+  "int": 0,
+  "cont": 53457,
+  "rows": 121161,
+  "nonz": 419447,
+  "group": "uccase",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "neos-631710": {
+  "status": "easy",
+  "vars": 167056,
+  "bin": 167056,
+  "int": 0,
+  "cont": 0,
+  "rows": 169576,
+  "nonz": 834166,
+  "group": "neos-pseudoapplication-75",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "binpacking",
+   "precedence",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "satellites2-40": {
+  "status": "easy",
+  "vars": 35378,
+  "bin": 34324,
+  "int": 0,
+  "cont": 1054,
+  "rows": 20916,
+  "nonz": 283668,
+  "group": "satellites",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "cardinality",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "ns1644855": {
+  "status": "easy",
+  "vars": 30200,
+  "bin": 10000,
+  "int": 0,
+  "cont": 20200,
+  "rows": 40698,
+  "nonz": 2110696,
+  "group": "neos-pseudoapplication-76",
+  "tags": [
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary",
+   "set_partitioning",
+   "variable_bound"
+  ]
+ },
+ "bab2": {
+  "status": "hard",
+  "vars": 147912,
+  "bin": 147912,
+  "int": 0,
+  "cont": 0,
+  "rows": 17245,
+  "nonz": 2027726,
+  "group": "bab",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "binary",
+   "cardinality",
+   "decomposition",
+   "equation_knapsack",
+   "invariant_knapsack",
+   "knapsack",
+   "mixed_binary",
+   "set_covering",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "chromaticindex512-7": {
+  "status": "easy",
+  "vars": 36864,
+  "bin": 36864,
+  "int": 0,
+  "cont": 0,
+  "rows": 33791,
+  "nonz": 135156,
+  "group": "chromaticindex",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "chromaticindex1024-7": {
+  "status": "easy",
+  "vars": 73728,
+  "bin": 73728,
+  "int": 0,
+  "cont": 0,
+  "rows": 67583,
+  "nonz": 270324,
+  "group": "chromaticindex",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_packing",
+   "set_partitioning"
+  ]
+ },
+ "assign1-5-8": {
+  "status": "easy",
+  "vars": 156,
+  "bin": 130,
+  "int": 0,
+  "cont": 26,
+  "rows": 161,
+  "nonz": 3720,
+  "group": "assign1",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "mixed_binary",
+   "set_partitioning"
+  ]
+ },
+ "binkar10_1": {
+  "status": "easy",
+  "vars": 2298,
+  "bin": 170,
+  "int": 0,
+  "cont": 2128,
+  "rows": 1026,
+  "nonz": 4496,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "mixed_binary"
+  ]
+ },
+ "blp-ar98": {
+  "status": "easy",
+  "vars": 16021,
+  "bin": 15806,
+  "int": 0,
+  "cont": 215,
+  "rows": 1128,
+  "nonz": 200601,
+  "group": "blp",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "equation_knapsack",
+   "general_linear",
+   "mixed_binary",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "istanbul-no-cutoff": {
+  "status": "easy",
+  "vars": 5282,
+  "bin": 30,
+  "int": 0,
+  "cont": 5252,
+  "rows": 20346,
+  "nonz": 71477,
+  "group": "\u2013",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "knapsack",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "leo1": {
+  "status": "easy",
+  "vars": 6731,
+  "bin": 6730,
+  "int": 0,
+  "cont": 1,
+  "rows": 593,
+  "nonz": 131218,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "mixed_binary",
+   "set_covering",
+   "set_packing",
+   "variable_bound"
+  ]
+ },
+ "rmatr200-p5": {
+  "status": "easy",
+  "vars": 37816,
+  "bin": 200,
+  "int": 0,
+  "cont": 37616,
+  "rows": 37617,
+  "nonz": 113048,
+  "group": "rmatr",
+  "tags": [
+   "benchmark_suitable",
+   "cardinality",
+   "mixed_binary"
+  ]
+ },
+ "pg5_34": {
+  "status": "easy",
+  "vars": 2600,
+  "bin": 100,
+  "int": 0,
+  "cont": 2500,
+  "rows": 225,
+  "nonz": 7700,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary"
+  ]
+ },
+ "eil33-2": {
+  "status": "easy",
+  "vars": 4516,
+  "bin": 4516,
+  "int": 0,
+  "cont": 0,
+  "rows": 32,
+  "nonz": 44243,
+  "group": "eil",
+  "tags": [
+   "benchmark_suitable",
+   "binary",
+   "set_partitioning"
+  ]
+ },
+ "snp-02-004-104": {
+  "status": "easy",
+  "vars": 228350,
+  "bin": 167,
+  "int": 167,
+  "cont": 228016,
+  "rows": 126512,
+  "nonz": 463941,
+  "group": "supplynetworkplanning",
+  "tags": [
+   "aggregations",
+   "benchmark_suitable",
+   "general_linear",
+   "mixed_binary",
+   "variable_bound"
+  ]
+ },
+ "map10": {
+  "status": "easy",
+  "vars": 164547,
+  "bin": 146,
+  "int": 0,
+  "cont": 164401,
+  "rows": 328818,
+  "nonz": 549920,
+  "group": "map",
+  "tags": [
+   "benchmark_suitable",
+   "knapsack",
+   "mixed_binary",
+   "precedence",
+   "variable_bound"
+  ]
+ },
+ "supportcase40": {
+  "status": "easy",
+  "vars": 16440,
+  "bin": 2000,
+  "int": 0,
+  "cont": 14440,
+  "rows": 38192,
+  "nonz": 104420,
+  "group": "\u2013",
+  "tags": [
+   "benchmark_suitable",
+   "decomposition",
+   "mixed_binary",
+   "precedence",
+   "set_packing",
+   "variable_bound"
+  ]
+ }
+}
