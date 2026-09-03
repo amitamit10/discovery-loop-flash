@@ -31,6 +31,13 @@ Mean seed gap **5.98%**; champion total at the seed = **−0.5985** (negative re
 each clipped at −0.5). The loop's job is to close these gaps; a champion total above −0.5985 is progress, a
 positive per-target contribution means that instance beat its best known.
 
+The seed solver is **deterministic** (no random moves) and its local search **converges well within 60 s** and
+then idles (it has no restart), so these 60 s numbers are what it produces at any larger budget too — checked on
+the worst-gap target X-n411-k19, which gives 21405 at both 60 s and 120 s. The module's `DEFAULTS` are
+`time=120, workers=3`; the extra per-target time is headroom for the *evolved* solvers (LNS / restarts /
+simulated annealing), not the seed, so a night run reproduces exactly this seed table. `workers` is parallelism
+only and does not change any per-target result.
+
 ## Verifier ground truth
 
 `verify.py` parses the TSPLIB `.vrp` (NODE_COORD / DEMAND / DEPOT sections, CAPACITY, EUC_2D) and rounds each

@@ -56,11 +56,13 @@ def test_verifier_rejects_bad_solutions():
     orig = verify.load_instance
     try:
         _synthetic()
-        dup = verify.check({"routes": [[1, 2], [3, 4, 1]]}, "SYNTH")  # customer 1 twice
+        dup = verify.check({"routes": [[1, 2], [3], [4], [1]]}, "SYNTH")  # customer 1 twice, every load <= 10
         over = verify.check({"routes": [[1, 2, 3]]}, "SYNTH")  # demand 12 > capacity 10
         miss = verify.check({"routes": [[1, 2], [3]]}, "SYNTH")  # customer 4 missing
         oor = verify.check({"routes": [[1, 2], [3, 5]]}, "SYNTH")  # customer 5 out of range 1..4
+        # duplicate is the SOLE defect: no route over capacity, nothing missing
         assert not dup["feasible"] and dup["duplicate_customers"] == [1], dup
+        assert dup["over_capacity"] is None and dup["missing_customers"] == [], dup
         assert not over["feasible"] and over["over_capacity"] is not None, over
         assert not miss["feasible"] and miss["missing_customers"] == [4], miss
         assert not oor["feasible"], oor
@@ -99,10 +101,12 @@ def _run(argv, no_publish, tmp):
     # setattr (not direct assignment) so a dead-code scanner does not read these test stubs as unused writes
     setattr(loop, "layout", lambda name: (os.path.join(tmp, "best"), os.path.join(tmp, "runs")))
     setattr(loop.Loop, "publish", lambda self: calls.__setitem__("n", calls["n"] + 1))
-    setattr(loop.Loop, "evaluate", lambda self, *a, **k: [])  # no solver runs, no network
-    setattr(loop.Loop, "update_bests", lambda self, *a, **k: (["X-n280-k17"], ["X-n280-k17"]))  # force wins & improved
-    setattr(loop.Loop, "write_status", lambda self, *a, **k: None)
-    setattr(loop.Loop, "call_model", staticmethod(lambda *a, **k: ("# stub\n", 0.0, "stub idea")))
+    setattr(loop.Loop, "evaluate", lambda self, *_a, **_k: [])  # no solver runs, no network
+    setattr(
+        loop.Loop, "update_bests", lambda self, *_a, **_k: (["X-n280-k17"], ["X-n280-k17"])
+    )  # force wins & improved
+    setattr(loop.Loop, "write_status", lambda self, *_a, **_k: None)
+    setattr(loop.Loop, "call_model", staticmethod(lambda *_a, **_k: ("# stub\n", 0.0, "stub idea")))
     full = ["loop.py", "--problem", "cvrp", *argv] + (["--no-publish"] if no_publish else [])
     old = sys.argv
     sys.argv = full
