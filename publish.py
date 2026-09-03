@@ -131,6 +131,11 @@ def main():
     if not cands:
         print("email: nothing new beats the live table")
         return
+    if not getattr(P, "EMAIL_TO", None):
+        print(
+            f"email: {a.problem} has no maintainer address; GitHub push is the publication ({[t for t, _, _ in cands]})"
+        )
+        return
     email(P, best, cands, ledger, ledger_path, lock, a.dry_run, a.force)
 
 

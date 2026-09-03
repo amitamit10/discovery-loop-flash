@@ -69,7 +69,9 @@ class Loop:
             p = subprocess.run(
                 [sys.executable, solver, *self.P.solver_argv(target, budget, seed, out)],
                 capture_output=True,
-                text=True, encoding="utf-8", errors="replace",
+                text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=budget + 45,
                 env=env,
             )
@@ -178,7 +180,15 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
             "You are an expert in numerical and combinatorial optimisation. Output only what is asked.",
         ]
         p = subprocess.run(
-            cmd, input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=900, shell=(os.name == "nt")
+            cmd,
+            input=prompt,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
+            timeout=900,
+            shell=(os.name == "nt"),
         )
         try:
             j = json.loads(p.stdout)
@@ -233,9 +243,19 @@ def main():
     ap.add_argument("--iters", type=int, default=40)
     ap.add_argument("--budget", type=float, default=30.0, help="max model spend in USD")
     ap.add_argument("--model", default="claude-fable-5-1")
+    ap.add_argument("--plateau-window", type=int, default=4, help="consecutive non-improving iters before plateau stop")
+    ap.add_argument(
+        "--plateau-threshold", type=float, default=0.01, help="min total improvement across window to count as progress"
+    )
+    ap.add_argument(
+        "--wall-minutes",
+        type=float,
+        help="stop before starting an iteration that cannot finish by this wall-clock limit",
+    )
     ap.add_argument("--eval-only", action="store_true")
     ap.add_argument("--refresh-records", action="store_true")
     a = ap.parse_args()
+    deadline = time.time() + 60 * a.wall_minutes if a.wall_minutes else None
     L = Loop(a.problem)
     P = L.P
     targets = a.targets.split(",") if a.targets else list(P.TARGETS)
@@ -275,8 +295,46 @@ def main():
         it += 1
         if a.eval_only:
             return
+
+    def check_plateau(window, threshold):
+        """Return True if the last `window` iterations show no meaningful progress.
+
+        Three independent signals (any one triggers):
+        1. All rejected/no-code in the window (nothing worked).
+        2. No champion in the window (model is spinning).
+        3. Total improvement across the window < threshold (marginal gains not worth the cost).
+           This uses the window's spend to compute improvement-per-dollar; if the window
+           contains a champion but the gain is tiny relative to cost, it still triggers.
+        """
+        recent = [h for h in history if h["status"] not in ("seed",)]
+        if len(recent) < window:
+            return False
+        tail = recent[-window:]
+        # Signal 1: all failures
+        if all(h["status"] in ("rejected", "no-code") for h in tail):
+            return True
+        # Signal 2: no champions at all
+        champ_totals = [h["total"] for h in tail if h["status"] == "champion"]
+        if not champ_totals:
+            return True
+        # Signal 3: improvement too small (absolute)
+        best_before = max(
+            (h["total"] for h in history[:-window] if h["status"] in ("champion", "seed")),
+            default=0,
+        )
+        improvement = max(champ_totals) - best_before
+        window_cost = sum(h["cost"] for h in tail)
+        if improvement < threshold and window_cost > 0:
+            return True
+        return False
+
     last_results = None
     while it < a.iters and cost_total < a.budget:
+        if deadline is not None and time.time() + budget + 360 > deadline:
+            print(
+                f"[wall] {a.wall_minutes:.0f} min limit reached; champion total={champ_total:.4f} spend=${cost_total:.2f}"
+            )
+            break
         prompt = L.build_prompt(targets, rec, last_results, history)
         code, cost, idea = L.call_model(prompt, a.model)
         cost_total += cost
@@ -327,7 +385,15 @@ def main():
         if set(wins) & set(improved):
             L.publish()
         it += 1
-    print(f"done. champion total={champ_total:.4f} spend=${cost_total:.2f}")
+        if check_plateau(a.plateau_window, a.plateau_threshold):
+            print(
+                f"[plateau] no meaningful improvement in last {a.plateau_window} iterations "
+                f"(threshold={a.plateau_threshold}). Stopping early to save budget. "
+                f"champion total={champ_total:.4f} spend=${cost_total:.2f}"
+            )
+            break
+    else:
+        print(f"done. champion total={champ_total:.4f} spend=${cost_total:.2f}")
     L.publish()
 
 

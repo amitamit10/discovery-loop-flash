@@ -11,7 +11,7 @@ import verify  # noqa: E402
 
 TITLE = "circle packing (Packomania csqv)"
 TARGETS = ["26", "32", "101", "102", "103", "105", "106", "107", "108", "109", "111", "114"]
-DEFAULTS = {"time": 120, "workers": 6}
+DEFAULTS = {"time": 120, "workers": 3}
 MAXIMIZE = True
 FAIL_SCORE = 0.0
 
