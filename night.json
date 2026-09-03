@@ -1,6 +1,7 @@
 {
  "slots": [
-  {"problem": "miplib_heur", "minutes": 235, "budget": 15},
-  {"problem": "pglib_opf", "minutes": 235, "budget": 15}
+  {"problem": "miplib_heur", "minutes": 160, "budget": 15},
+  {"problem": "pglib_opf", "minutes": 160, "budget": 15},
+  {"problem": "cvrp", "minutes": 160, "budget": 15}
  ]
 }
