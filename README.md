@@ -33,3 +33,18 @@ Outputs per problem: `best*/solver.py` (champion), `best*/<sub>/` (candidates in
 python publish.py --dry-run   # show what would go out
 python publish.py             # push + request approval for anything new
 ```
+
+## pglib_opf: AC optimal power flow on the PGLib-OPF benchmark
+
+IEEE PES PGLib-OPF v23.07 "typical operating conditions" cases, 3 to 793 buses. The value to beat per case is the
+AC-OPF objective PowerModels.jl + IPOPT reached (BASELINE.md, 5 significant figures, so a win must clear 1e-4
+relative). `problems/pglib_opf/verify.py` re-checks every constraint of the AC-OPF model with numpy at 1e-6 pu
+(voltage and P/Q bounds, nodal balance, apparent-power limits at both ends, angle limits, reference angle).
+Seed solver = PYPOWER PIPS interior point + Newton polish + random multi-start (`pip install PYPOWER`).
+Case files download on first use from the pinned tag. Nothing is emailed; wins go to the pglib-opf issue tracker by hand.
+
+```powershell
+python loop.py --problem pglib_opf --eval-only              # seed solver on all 21 cases, no model calls
+python loop.py --problem pglib_opf --wall-minutes 235 --budget 15
+python problems/pglib_opf/verify.py best-pglib_opf/sol/pglib_opf_case14_ieee.json
+```
