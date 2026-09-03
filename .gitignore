@@ -7,3 +7,4 @@ __pycache__/
 .ruff_cache/
 problems/miplib/instances/
 problems/pglib_opf/instances/
+problems/cvrp/instances/
