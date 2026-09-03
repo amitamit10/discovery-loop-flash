@@ -1,10 +1,12 @@
 """Island-model basin-hopping solver for csqv: hex-lattice template inits (incl. under-full lattice + strip fill),
 affine-lattice template bank (rotated / sheared / anisotropic hex lattices sized by bisection to hold exactly n sites),
-sparse-neighbour penalty L-BFGS-B, adaptive move selection incl. lattice-slip row/band moves, half-plane crossover
-with a dihedral-symmetry-augmented elite pool and defect-migration moves (remove -> relax -> refill largest holes;
-insert -> relax -> evict weakest), LP-optimal radii for fixed centres, fast exact KKT-Newton active-set polish on the
-contact graph for every candidate, SLSQP polish on new bests, minimal-loss final strict shrink, and a second hopping
-phase that reclaims the tail of the time budget after the final polish.
+sparse-neighbour penalty L-BFGS-B, adaptive move selection incl. lattice-slip row/band moves and local grain rotation,
+half-plane crossover with a dihedral-symmetry-augmented elite pool, defect-migration moves with exact hole finding
+(Delaunay circumcentres of wall-mirrored centres + samples, Nelder-Mead refined) and multi-step vacancy-diffusion
+chains (remove weakest/loosest/neighbour-of-last-hole -> relax -> refill, repeated; insert -> relax -> evict weakest),
+LP-optimal radii for fixed centres, fast exact KKT-Newton active-set polish on the contact graph for every candidate,
+SLSQP polish on new bests, minimal-loss final strict shrink, and a second hopping phase that reclaims the tail of the
+time budget after the final polish.
 Independent chains run in worker processes (one per available core) and exchange elites through atomic JSON files.
 Interface: python solver.py --n N --time SECONDS --seed S --out PATH
 """
@@ -20,6 +22,11 @@ import math
 import time
 import numpy as np
 from scipy.optimize import minimize, linprog
+
+try:
+    from scipy.spatial import Delaunay
+except Exception:  # pragma: no cover
+    Delaunay = None
 
 
 class Timeout(Exception):
@@ -505,25 +512,110 @@ def full_polish(sol, n, deadline, budget, slsqp=True, rounds=4, maxiter=120):
     return best
 
 
-# ----------------------------------------------------------------------------- init & moves
-def fill_holes(ck, rk, k, rng, samples=3000):
-    P = rng.random((samples, 2))
+# ----------------------------------------------------------------------------- exact hole finding
+def _hole_val(P, ck, rk):
+    """Radius of the largest empty circle centred at each point of P (negative if the point is covered)."""
     wall = np.minimum(np.minimum(P[:, 0], 1 - P[:, 0]), np.minimum(P[:, 1], 1 - P[:, 1]))
     if len(ck):
-        h = np.minimum((np.sqrt(((P[:, None, :] - ck[None, :, :]) ** 2).sum(-1)) - rk[None, :]).min(1), wall)
-    else:
-        h = wall
+        d = np.sqrt(((P[:, None, :] - ck[None, :, :]) ** 2).sum(-1)) - rk[None, :]
+        return np.minimum(d.min(1), wall)
+    return wall
+
+
+def _circumcentres(T):
+    a, b, c = T[:, 0], T[:, 1], T[:, 2]
+    bx = b - a
+    cx = c - a
+    d = 2.0 * (bx[:, 0] * cx[:, 1] - bx[:, 1] * cx[:, 0])
+    ok = np.abs(d) > 1e-12
+    d = np.where(ok, d, 1.0)
+    b2 = (bx * bx).sum(1)
+    c2 = (cx * cx).sum(1)
+    ux = (cx[:, 1] * b2 - bx[:, 1] * c2) / d
+    uy = (bx[:, 0] * c2 - cx[:, 0] * b2) / d
+    return (a + np.stack([ux, uy], 1))[ok]
+
+
+def hole_candidates(ck, rk):
+    """Delaunay circumcentres of the centres augmented with their wall mirror images (so wall-touching holes get
+    candidates too). Empty array on any failure."""
+    if Delaunay is None or len(ck) < 4:
+        return np.zeros((0, 2))
+    try:
+        rbar = max(float(rk.mean()), 1e-6)
+        band = 3.0 * rbar
+        pts = [ck]
+        for col, lo in ((0, True), (0, False), (1, True), (1, False)):
+            sel = ck[:, col] < band if lo else ck[:, col] > 1 - band
+            if sel.any():
+                m = ck[sel].copy()
+                m[:, col] = -m[:, col] if lo else 2.0 - m[:, col]
+                pts.append(m)
+        pts = np.concatenate(pts)
+        if len(pts) > 4000:
+            return np.zeros((0, 2))
+        tri = Delaunay(pts)
+        cc = _circumcentres(pts[tri.simplices])
+        m = (cc[:, 0] > 0) & (cc[:, 0] < 1) & (cc[:, 1] > 0) & (cc[:, 1] < 1) & np.isfinite(cc).all(1)
+        return cc[m]
+    except Exception:
+        return np.zeros((0, 2))
+
+
+def _refine_hole(p, h0, ck, rk):
+    """Nelder-Mead maximisation of the empty-circle radius from a candidate centre."""
+    try:
+        s = max(0.5 * float(h0), 1e-3)
+        simplex = np.array([p, p + [s, 0.0], p + [0.0, s]])
+        f = lambda q: -float(_hole_val(np.clip(q, 0.0, 1.0)[None, :], ck, rk)[0])
+        res = minimize(
+            f, p, method="Nelder-Mead", options={"maxfev": 70, "xatol": 1e-7, "fatol": 1e-10, "initial_simplex": simplex}
+        )
+        q = np.clip(res.x, 0.0, 1.0)
+        return q, -float(res.fun)
+    except Exception:
+        return p, float(h0)
+
+
+def fill_holes(ck, rk, k, rng, samples=3000, refine=True):
+    """Greedy sequential placement of k circles into the largest empty holes: candidates are random samples plus
+    Delaunay circumcentres (wall-mirrored), the best few are refined by Nelder-Mead to the exact local hole."""
+    ck = np.asarray(ck, float).reshape(-1, 2)
+    rk = np.asarray(rk, float).reshape(-1)
+    P = rng.random((samples, 2))
+    if refine:
+        cc = hole_candidates(ck, rk)
+        if len(cc):
+            P = np.concatenate([P, cc])
+    h = _hole_val(P, ck, rk)
+    ck2 = ck.copy()
+    rk2 = rk.copy()
     cs = np.zeros((k, 2))
     rs = np.zeros(k)
     for t in range(k):
-        j = int(np.argmax(h))
-        hr = max(float(h[j]), 1e-3)
-        cs[t] = P[j]
+        if refine:
+            order = np.argsort(-h)[:3]
+            bp = P[order[0]].copy()
+            bh = float(h[order[0]])
+            for j in order:
+                q, hq = _refine_hole(P[j], h[j], ck2, rk2)
+                if hq > bh and np.isfinite(q).all():
+                    bp, bh = q, hq
+        else:
+            j = int(np.argmax(h))
+            bp = P[j].copy()
+            bh = float(h[j])
+        bp = np.clip(bp, 1e-3, 1 - 1e-3)
+        hr = max(bh, 1e-3)
+        cs[t] = bp
         rs[t] = hr
-        h = np.minimum(h, np.sqrt(((P - P[j]) ** 2).sum(1)) - hr)
+        ck2 = np.concatenate([ck2, bp[None, :]])
+        rk2 = np.concatenate([rk2, [hr]])
+        h = np.minimum(h, np.sqrt(((P - bp) ** 2).sum(1)) - hr)
     return cs, rs
 
 
+# ----------------------------------------------------------------------------- init & moves
 def hex_lattice(n, rng):
     s3 = math.sqrt(3.0)
     full, part = [], []
@@ -789,6 +881,37 @@ def lattice_dir(c, r, rng):
         return rng.uniform(0, math.pi / 3)
 
 
+def contact_counts(c, r):
+    n = len(c)
+    rbar = max(float(r.mean()), 1e-6)
+    I, J = build_pairs(c, r, 0.05 * rbar)
+    cnt = np.bincount(I, minlength=n) + np.bincount(J, minlength=n)
+    wall = np.minimum(np.minimum(c[:, 0], 1 - c[:, 0]), np.minimum(c[:, 1], 1 - c[:, 1])) - r
+    cnt = cnt + (wall < 0.05 * rbar)
+    return cnt
+
+
+def pick_defect(c, r, rng, k, last, rbar):
+    """Which circle(s) to take out: weakest (smallest), loosest (fewest contacts), a neighbour of the hole that was
+    just filled (so the vacancy keeps walking), or random."""
+    n = len(c)
+    u = rng.random()
+    if last is not None and u < 0.4 and n > 8:
+        d = np.sqrt(((c - c[last]) ** 2).sum(1))
+        d[last] = np.inf
+        nb = np.argsort(d)[:6]
+        return rng.choice(nb, k, replace=False)
+    if u < 0.7:
+        return np.argsort(r + rng.normal(0, 0.15 * rbar, n))[:k]
+    if u < 0.87:
+        try:
+            cnt = contact_counts(c, r)
+            return np.argsort(cnt + rng.random(n))[:k]
+        except Exception:
+            pass
+    return rng.choice(n, k, replace=False)
+
+
 def op_jitter(scale):
     def f(c, r, rng, n, ctx):
         rbar = max(float(r.mean()), 1e-6)
@@ -854,6 +977,30 @@ def op_local(c, r, rng, n, ctx):
     idx = np.nonzero(d < 3.0 * rbar)[0]
     c2 = c.copy()
     c2[idx] += rng.normal(0, rbar * 0.5, (len(idx), 2))
+    return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
+
+
+def op_grain(c, r, rng, n, ctx):
+    """Rotate the circles inside a disc (a local grain) by a sizeable angle about a circle centre or a hole: creates a
+    misoriented grain / grain boundary that the relaxation then heals into a different defect arrangement."""
+    rbar = max(float(r.mean()), 1e-6)
+    if rng.random() < 0.5:
+        p = c[int(rng.integers(0, n))].copy()
+    else:
+        p = rng.random(2)
+    R = rbar * rng.uniform(2.0, 4.0)
+    ang = (1.0 if rng.random() < 0.5 else -1.0) * rng.uniform(math.pi / 9, math.pi / 3)
+    d = np.sqrt(((c - p) ** 2).sum(1))
+    idx = np.nonzero(d < R)[0]
+    if len(idx) < 2:
+        return op_local(c, r, rng, n, ctx)
+    ca, sa = math.cos(ang), math.sin(ang)
+    v = c[idx] - p
+    rot = np.stack([ca * v[:, 0] - sa * v[:, 1], sa * v[:, 0] + ca * v[:, 1]], 1)
+    c2 = c.copy()
+    c2[idx] = p + rot
+    rr = np.minimum(r, 0.5)[:, None]
+    c2 = np.minimum(np.maximum(c2, rr), 1 - rr)
     return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
 
 
@@ -937,8 +1084,9 @@ def op_cross(c, r, rng, n, ctx):
 
 def op_migrate(mode):
     """Defect migration with an intermediate relaxation.
-    mode 0 (remove-relax-refill): take out the weakest circle(s), let the remaining packing re-equilibrate (the
-      vacancy smears out and the largest hole moves), then re-insert them into the new largest holes.
+    mode 0 (vacancy diffusion chain): take out the weakest / loosest / a neighbour of the last refilled hole, let the
+      remaining packing re-equilibrate (the vacancy smears out and the largest hole moves), re-insert into the exact
+      largest hole(s); repeated 1-3 times so the defect random-walks away from where it started.
     mode 1 (insert-relax-evict): push an extra circle into the largest hole, relax the n+1 packing under that
       pressure, then evict the weakest ORIGINAL circle, so a defect migrates from the weakest site to the hole.
     Plain remove-and-refill (without relaxation) refills the very hole the circle just left and lands back in the
@@ -950,28 +1098,38 @@ def op_migrate(mode):
         dl = ctx.get("deadline", time.time() + 1.0)
         rbar = max(float(r.mean()), 1e-6)
         if mode == 0:
-            k = int(rng.integers(1, 3))
-            if rng.random() < 0.7:
-                idx = np.argsort(r + rng.normal(0, 0.15 * rbar, n))[:k]
-            else:
-                idx = rng.choice(n, k, replace=False)
-            keep = np.ones(n, bool)
-            keep[idx] = False
-            ck, rk = run_penalty(c[keep], r[keep], n - k, (1e3, 1e4), 60, dl)
-            cs, rs = fill_holes(ck, rk, k, rng, samples=4000)
+            steps = 1 + int(rng.random() < 0.5) + int(rng.random() < 0.3)
             c2, r2 = c.copy(), r.copy()
-            c2[keep] = ck
-            r2[keep] = rk
-            c2[idx] = cs
-            r2[idx] = 0.9 * rs
+            last = None
+            for s in range(steps):
+                if time.time() > dl:
+                    break
+                k = int(rng.integers(1, 3)) if s == 0 else 1
+                idx = np.asarray(pick_defect(c2, r2, rng, k, last, rbar))
+                keep = np.ones(n, bool)
+                keep[idx] = False
+                ck, rk = run_penalty(c2[keep], r2[keep], n - k, (1e3, 1e4), 60, dl)
+                cs, rs = fill_holes(ck, rk, k, rng, samples=2500)
+                c2[keep] = ck
+                r2[keep] = rk
+                c2[idx] = cs
+                r2[idx] = 0.9 * rs
+                last = int(idx[0])
             return _clip(c2), r2, (1e3, 1e4, 1e5)
-        cs, rs = fill_holes(c, r, 1, rng, samples=4000)
+        cs, rs = fill_holes(c, r, 1, rng, samples=2500)
         rnew = max(0.9 * float(rs[0]), rng.uniform(0.4, 0.8) * rbar)
         c1 = np.concatenate([c, cs])
         r1 = np.concatenate([r, [rnew]])
         c1, r1 = run_penalty(c1, r1, n + 1, (1e2, 1e3, 1e4), 60, dl)
-        if rng.random() < 0.75:
+        u = rng.random()
+        if u < 0.6:
             j = int(np.argmin(r1[:n] + rng.normal(0, 0.15 * rbar, n)))
+        elif u < 0.8:
+            try:
+                cnt = contact_counts(c1[:n], r1[:n])
+                j = int(np.argmin(cnt + rng.random(n)))
+            except Exception:
+                j = int(np.argmin(r1[:n]))
         else:
             j = int(np.argmin(r1 + rng.normal(0, 0.15 * rbar, n + 1)))
         c2 = c1[:n].copy()
@@ -1000,6 +1158,7 @@ OPS = [
     op_slip(2),
     op_migrate(0),
     op_migrate(1),
+    op_grain,
 ]
 
 
