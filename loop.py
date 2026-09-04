@@ -241,6 +241,11 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
                         if "def " in g.group(1) or "import " in g.group(1):
                             m = g
                             break
+                if not m:
+                    # truncated response: unclosed trailing fence -> take to EOF
+                    g = re.search(r"```(?:\w+)?\s*\n(.*)\s*$", text, re.S)
+                    if g and ("def " in g.group(1) or "import " in g.group(1)):
+                        m = g
                 idea = re.search(r"IDEA:\s*(.+)", text)
                 return (m.group(1) if m else None), float(cost), (idea.group(1).strip() if idea else "(no idea line)"), text[:20000]
         # fallback: claude CLI
