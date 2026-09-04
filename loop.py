@@ -196,7 +196,7 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
                     if prov == "opencode-go":
                         url = "https://opencode.ai/zen/go/v1/responses"
                         body = json.dumps({"model": mid, "input": prompt,
-                                           "max_output_tokens": 16000}).encode()
+                                           "max_output_tokens": 32000}).encode()
                         req = urllib.request.Request(url, data=body, headers=UA)
                         with urllib.request.urlopen(req, timeout=600) as r:
                             d = json.load(r)
