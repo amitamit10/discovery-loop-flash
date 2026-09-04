@@ -182,7 +182,7 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
                             pass
                 key = key.strip()
                 if not key:
-                    return None, 0.0, "missing OPENCODE_GO_API_KEY"
+                    return None, 0.0, "missing OPENCODE_GO_API_KEY", ""
                 UA = {"Authorization": "Bearer " + key, "Content-Type": "application/json",
                       "User-Agent": "opencode/1.18.16"}
                 def _cost_from_usage(usage, default=0.0):
@@ -233,7 +233,7 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
                         em = e.read().decode()[:400]
                     except Exception:
                         em = str(e)[:400]
-                    return None, 0.0, f"http {model} failed: {type(e).__name__} {em}"
+                    return None, 0.0, f"http {model} failed: {type(e).__name__} {em}", ""
                 m = re.search(r"```python\s*\n(.*?)```", text, re.S)
                 if not m:
                     # fallback: any fenced block containing code
@@ -242,7 +242,7 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
                             m = g
                             break
                 idea = re.search(r"IDEA:\s*(.+)", text)
-                return (m.group(1) if m else None), float(cost), (idea.group(1).strip() if idea else "(no idea line)")
+                return (m.group(1) if m else None), float(cost), (idea.group(1).strip() if idea else "(no idea line)"), text[:20000]
         # fallback: claude CLI
         env = {k: v for k, v in os.environ.items() if not (k.startswith("CLAUDE") or k.startswith("ANTHROPIC_"))}
         cmd = [
@@ -276,11 +276,11 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
         try:
             j = json.loads(p.stdout)
         except json.JSONDecodeError:
-            return None, 0.0, f"bad cli output: {p.stdout[-300:]} {p.stderr[-300:]}"
+            return None, 0.0, f"bad cli output: {p.stdout[-300:]} {p.stderr[-300:]}", ""
         text, cost = j.get("result") or "", float(j.get("total_cost_usd") or 0)
         m = re.search(r"```python\s*\n(.*?)```", text, re.S)
         idea = re.search(r"IDEA:\s*(.+)", text)
-        return (m.group(1) if m else None), cost, (idea.group(1).strip() if idea else "(no idea line)")
+        return (m.group(1) if m else None), cost, (idea.group(1).strip() if idea else "(no idea line)"), text[:20000]
 
     # ── reporting ──
     def write_status(self, targets, rec, history, cost_total, champ_total):
@@ -442,12 +442,12 @@ def main():
             else:
                 beam_models.append(a.model)
         def _call(m):
-            c, co, i = L.call_model(prompt, m)
+            c, co, i, raw = L.call_model(prompt, m)
             # primary fallback: 1.2 -> 1.3 (never deepseek unless explicitly asked)
             if not c and m == a.model and a.fallback_model and a.fallback_model != m:
-                c2, co2, i2 = L.call_model(prompt, a.fallback_model)
-                return (m + "->" + a.fallback_model, c2, co + co2, i2 + f" [fallback from {m}]")
-            return (m, c, co, i)
+                c2, co2, i2, raw2 = L.call_model(prompt, a.fallback_model)
+                return (m + "->" + a.fallback_model, c2, co + co2, i2 + f" [fallback from {m}]", raw + "\n\n=====FALLBACK=====\n\n" + raw2)
+            return (m, c, co, i, raw)
         with ThreadPoolExecutor(max_workers=beam) as mex:
             beam_out = list(mex.map(_call, beam_models))
         # evaluate each beam candidate; keep per-target bests from ALL beams, champion = best total
@@ -455,8 +455,12 @@ def main():
         os.makedirs(wd, exist_ok=True)
         beam_results = []
         iter_cost = 0.0
-        for bi, (used_model, code, cost, idea) in enumerate(beam_out):
+        for bi, (used_model, code, cost, idea, raw) in enumerate(beam_out):
             iter_cost += cost
+            try:
+                open(os.path.join(wd, f"raw_beam{bi}.txt"), "w", encoding="utf-8").write(f"MODEL: {used_model}\nIDEA: {idea}\n" + "="*40 + "\n" + (raw or "(empty)"))
+            except Exception:
+                pass
             if not code:
                 beam_results.append({"model": used_model, "total": P.FAIL_SCORE * len(targets),
                                      "status": "no-code", "cost": cost, "idea": idea})
