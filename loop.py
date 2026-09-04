@@ -196,7 +196,7 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
                     if prov == "opencode-go":
                         url = "https://opencode.ai/zen/go/v1/responses"
                         body = json.dumps({"model": mid, "input": prompt,
-                                           "max_output_tokens": 8000}).encode()
+                                           "max_output_tokens": 16000}).encode()
                         req = urllib.request.Request(url, data=body, headers=UA)
                         with urllib.request.urlopen(req, timeout=600) as r:
                             d = json.load(r)
@@ -209,13 +209,13 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
                             cost = float(d.get("cost")) if d.get("cost") is not None else _cost_from_usage(d.get("usage") or {}, 0.05)
                         except Exception:
                             cost = _cost_from_usage(d.get("usage") or {}, 0.05)
-                        if (d.get("status") not in ("completed", None) and not text):
+                        if ((d.get("status") not in ("completed", None)) and not text):
                             return None, cost, f"responses status={d.get('status')} err={str(d.get('error'))[:300]}"
                     else:
                         url = "https://opencode.ai/zen/v1/chat/completions"
                         body = json.dumps({"model": mid,
                                            "messages": [{"role": "user", "content": prompt}],
-                                           "max_tokens": 8000}).encode()
+                                           "max_tokens": 16000}).encode()
                         req = urllib.request.Request(url, data=body, headers=UA)
                         with urllib.request.urlopen(req, timeout=600) as r:
                             d = json.load(r)
@@ -235,6 +235,12 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
                         em = str(e)[:400]
                     return None, 0.0, f"http {model} failed: {type(e).__name__} {em}"
                 m = re.search(r"```python\s*\n(.*?)```", text, re.S)
+                if not m:
+                    # fallback: any fenced block containing code
+                    for g in re.finditer(r"```(?:\w+)?\s*\n(.*?)```", text, re.S):
+                        if "def " in g.group(1) or "import " in g.group(1):
+                            m = g
+                            break
                 idea = re.search(r"IDEA:\s*(.+)", text)
                 return (m.group(1) if m else None), float(cost), (idea.group(1).strip() if idea else "(no idea line)")
         # fallback: claude CLI
