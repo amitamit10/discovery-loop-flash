@@ -210,7 +210,7 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
                         except Exception:
                             cost = _cost_from_usage(d.get("usage") or {}, 0.05)
                         if ((d.get("status") not in ("completed", None)) and not text):
-                            return None, cost, f"responses status={d.get('status')} err={str(d.get('error'))[:300]}"
+                            return None, cost, f"responses status={d.get('status')} err={str(d.get('error'))[:300]}", text[:20000]
                     else:
                         url = "https://opencode.ai/zen/v1/chat/completions"
                         body = json.dumps({"model": mid,
