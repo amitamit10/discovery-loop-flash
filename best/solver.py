@@ -1,11 +1,14 @@
+IDEA: Corner-anchored variable-radii templates with square-lattice bank, binary-search minimal shrink and radii-rescale anneal moves
+```python
 """Island-model basin-hopping solver for csqv: hex-lattice template inits (incl. under-full lattice + strip fill),
-affine-lattice template bank (rotated / sheared / anisotropic hex lattices sized by bisection to hold exactly n sites),
-sparse-neighbour penalty L-BFGS-B, adaptive move selection incl. lattice-slip row/band moves and local grain rotation,
+affine-lattice template bank (rotated / sheared / anisotropic hex + square lattices sized by bisection to hold exactly n sites),
+corner-anchored templates with wall-biased selection, sparse-neighbour penalty L-BFGS-B, adaptive move selection incl.
+lattice-slip row/band moves, local grain rotation, radius-rescale anneal and boundary-push moves,
 half-plane crossover with a dihedral-symmetry-augmented elite pool, defect-migration moves with exact hole finding
 (Delaunay circumcentres of wall-mirrored centres + samples, Nelder-Mead refined) and multi-step vacancy-diffusion
 chains (remove weakest/loosest/neighbour-of-last-hole -> relax -> refill, repeated; insert -> relax -> evict weakest),
 LP-optimal radii for fixed centres, fast exact KKT-Newton active-set polish on the contact graph for every candidate,
-SLSQP polish on new bests, minimal-loss final strict shrink, and a second hopping phase that reclaims the tail of the
+SLSQP polish on new bests, binary-search minimal-loss final strict shrink, and a second hopping phase that reclaims the tail of the
 time budget after the final polish.
 Independent chains run in worker processes (one per available core) and exchange elites through atomic JSON files.
 Interface: python solver.py --n N --time SECONDS --seed S --out PATH
@@ -83,7 +86,7 @@ def run_penalty(c, r, n, mus, maxiter, deadline):
                 C = z[: 2 * n].reshape(n, 2)
                 R = z[2 * n :]
                 rbar = max(float(R.mean()), 1e-6)
-                I, J = build_pairs(C, R, 2.5 * rbar + 0.02)
+                I, J = build_pairs(C, R, 3.0 * rbar + 0.02)
                 if len(I) == 0:
                     I, J = I0[:1], J0[:1]
             m = min(chunk, maxiter - it)
@@ -174,11 +177,29 @@ def make_strict(c, r):
     pv = (r[:, None] + r[None, :] - d).max()
     wv = (r - wall).max()
     base = max(pv / 2, wv, 0.0)
-    # minimal-loss uniform shrink: smallest safety margin that is strictly feasible in float64
-    for eps in (1e-14, 1e-13, 1e-12, 1e-11, 1e-10, 1e-9):
+    # binary-search minimal uniform shrink that is strictly feasible (recovers ~1e-12 per N)
+    lo = 0.0
+    hi = None
+    # find hi that is feasible
+    for eps in (1e-15, 5e-15, 1e-14, 5e-14, 1e-13, 1e-12, 1e-11, 1e-10, 1e-9, 1e-8):
         r2 = np.maximum(r - (base + eps), 1e-9)
         if strict_ok(c, r2):
-            return r2
+            hi = eps
+            break
+    if hi is None:
+        hi = 1e-8
+    # binary refine between lo and hi
+    for _ in range(30):
+        mid = 0.5 * (lo + hi)
+        r2 = np.maximum(r - (base + mid), 1e-9)
+        if strict_ok(c, r2):
+            hi = mid
+        else:
+            lo = mid
+    r2 = np.maximum(r - (base + hi), 1e-9)
+    if strict_ok(c, r2):
+        return r2
+    # fallback iterative
     for _ in range(4):
         pv = (r[:, None] + r[None, :] - d).max()
         wv = (r - wall).max()
@@ -234,7 +255,7 @@ def load_candidate(path, n):
 
 
 # ----------------------------------------------------------------------------- KKT-Newton active-set polish
-def newton_polish(c, r, n, deadline, rounds=3, iters=8):
+def newton_polish(c, r, n, deadline, rounds=4, iters=10):
     """Exact polish of a near-optimal packing: treat the near-active contact/wall constraints as equalities and run
     Newton on the KKT system (linear objective, quadratic constraints -> constant Lagrangian Hessian). Constraints
     with negative multipliers are dropped and newly violated ones added between rounds. Always finished by LP radii
@@ -247,7 +268,7 @@ def newton_polish(c, r, n, deadline, rounds=3, iters=8):
         z = np.concatenate([c.ravel(), r]).astype(float)
         I0, J0 = np.triu_indices(n, 1)
         rbar = max(float(r.mean()), 1e-6)
-        tol = 2e-3 * rbar
+        tol = 2.5e-3 * rbar
         gf = np.zeros(n3)
         gf[n2:] = -1.0
         C = z[:n2].reshape(n, 2)
@@ -506,7 +527,7 @@ def full_polish(sol, n, deadline, budget, slsqp=True, rounds=4, maxiter=120):
         if q["s"] > best["s"]:
             best = q
     if time.time() < deadline:
-        q = newton_polish(best["c"], best["r"], n, min(deadline, time.time() + 0.03 * budget))
+        q = newton_polish(best["c"], best["r"], n, min(deadline, time.time() + 0.04 * budget))
         if q["s"] > best["s"]:
             best = q
     return best
@@ -569,7 +590,7 @@ def _refine_hole(p, h0, ck, rk):
         simplex = np.array([p, p + [s, 0.0], p + [0.0, s]])
         f = lambda q: -float(_hole_val(np.clip(q, 0.0, 1.0)[None, :], ck, rk)[0])
         res = minimize(
-            f, p, method="Nelder-Mead", options={"maxfev": 70, "xatol": 1e-7, "fatol": 1e-10, "initial_simplex": simplex}
+            f, p, method="Nelder-Mead", options={"maxfev": 80, "xatol": 1e-7, "fatol": 1e-10, "initial_simplex": simplex}
         )
         q = np.clip(res.x, 0.0, 1.0)
         return q, -float(res.fun)
@@ -577,7 +598,7 @@ def _refine_hole(p, h0, ck, rk):
         return p, float(h0)
 
 
-def fill_holes(ck, rk, k, rng, samples=3000, refine=True):
+def fill_holes(ck, rk, k, rng, samples=3500, refine=True):
     """Greedy sequential placement of k circles into the largest empty holes: candidates are random samples plus
     Delaunay circumcentres (wall-mirrored), the best few are refined by Nelder-Mead to the exact local hole."""
     ck = np.asarray(ck, float).reshape(-1, 2)
@@ -679,6 +700,63 @@ def hex_lattice(n, rng):
     return c, rad
 
 
+def corner_lattice(n, rng):
+    """Corner-anchored template: place slightly larger discs in the 4 corners then fill interior with a hex lattice inset.
+    Exploits the fact that optimal packings often have larger circles touching two walls."""
+    if n < 8:
+        return None
+    s3 = math.sqrt(3.0)
+    k = int(math.ceil(math.sqrt(n)))
+    r0 = 0.5 / k
+    # corner circles: place at (r_c, r_c) with r_c ~ 1.15*r0
+    rc = r0 * rng.uniform(1.05, 1.25)
+    rc = min(rc, 0.18)
+    corners = np.array([[rc, rc], [1 - rc, rc], [rc, 1 - rc], [1 - rc, 1 - rc]])
+    crad = np.full(4, rc * rng.uniform(0.92, 1.0))
+    # interior hex lattice inset by 2*rc
+    inset = 2.2 * rc
+    avail = 1 - 2 * inset
+    if avail <= 0:
+        return None
+    # number of cols that fit
+    nc = max(2, int(avail / (2 * r0)))
+    nr = max(2, int(avail / (s3 * r0)))
+    pts = []
+    for i in range(nr):
+        y = inset + r0 + i * s3 * r0
+        if y + r0 > 1 - inset + 1e-9:
+            break
+        x0 = inset + r0 + (i % 2) * r0
+        for j in range(nc - (i % 2)):
+            x = x0 + 2 * r0 * j
+            if x + r0 > 1 - inset + 1e-9:
+                break
+            pts.append((x, y))
+    if not pts:
+        return None
+    pts = np.array(pts)
+    need = n - 4
+    if len(pts) < need:
+        extra_pts, _ = fill_holes(np.concatenate([corners, pts]), np.concatenate([crad, np.full(len(pts), r0)]), need - len(pts), rng, samples=3000)
+        pts = np.concatenate([pts, extra_pts])
+    elif len(pts) > need:
+        # wall-biased keep: prefer interior points farther from corners
+        keep = rng.permutation(len(pts))[:need] if rng.random() < 0.5 else np.argsort(np.sqrt(((pts - 0.5)**2).sum(1)))[ :need]
+        # bias: keep more central? actually we want diverse; use random 70%
+        if rng.random() < 0.7:
+            keep = rng.permutation(len(pts))[:need]
+        pts = pts[keep]
+    all_pts = np.concatenate([corners, pts])
+    all_rad = np.concatenate([crad, np.full(len(pts), r0)])
+    # small jitter and variable radii
+    all_pts = np.clip(all_pts + rng.normal(0, 0.07 * r0, all_pts.shape), 0.02, 0.98)
+    all_rad = all_rad * rng.uniform(0.82, 1.02, n)
+    # ensure corner circles still near walls
+    for i in range(4):
+        all_pts[i] = np.clip(all_pts[i], rc * 0.7, 1 - rc * 0.7)
+    return all_pts, all_rad
+
+
 def _lattice_pts(ua, ub, s, off, cap=6000):
     a = s * ua
     b = s * ub
@@ -710,19 +788,26 @@ def _lattice_pts(ua, ub, s, off, cap=6000):
     return P[m], r
 
 
-def build_lattice_bank(n, rng, samples, deadline, keep=40):
+def build_lattice_bank(n, rng, samples, deadline, keep=48):
     bank = []
     lo_cnt = max(2, n - int(0.15 * n))
     for _ in range(samples):
         if time.time() > deadline:
             break
         try:
-            if rng.random() < 0.3:
-                th = (0.0 if rng.random() < 0.5 else math.pi / 6) + rng.normal(0, 0.01)
+            # mix hex and square lattices
+            if rng.random() < 0.18:
+                # square lattice
+                th = rng.uniform(0, math.pi / 2)
+                phi = math.pi / 2 + rng.normal(0, 0.06)
+                ratio = 1.0 + rng.normal(0, 0.03)
             else:
-                th = rng.uniform(0, math.pi / 3)
-            phi = math.pi / 3 + rng.normal(0, 0.08)
-            ratio = 1.0 + rng.normal(0, 0.04)
+                if rng.random() < 0.3:
+                    th = (0.0 if rng.random() < 0.5 else math.pi / 6) + rng.normal(0, 0.01)
+                else:
+                    th = rng.uniform(0, math.pi / 3)
+                phi = math.pi / 3 + rng.normal(0, 0.08)
+                ratio = 1.0 + rng.normal(0, 0.04)
             ua = np.array([math.cos(th), math.sin(th)])
             ub = ratio * np.array([math.cos(th + phi), math.sin(th + phi)])
             off = rng.random(2)
@@ -769,6 +854,9 @@ def build_lattice_bank(n, rng, samples, deadline, keep=40):
             if r <= 1e-4:
                 continue
             score = r * min(cnt, n) + 0.35 * r * max(0, n - cnt)
+            # bonus for square lattice at near-square n
+            if abs(phi - math.pi/2) < 0.15:
+                score *= 1.02
             bank.append((score, P.copy(), r))
         except Exception:
             continue
@@ -779,7 +867,7 @@ def build_lattice_bank(n, rng, samples, deadline, keep=40):
 def affine_init(n, rng, bank):
     if not bank:
         return None
-    idx = min(int(rng.exponential(6.0)), len(bank) - 1)
+    idx = min(int(rng.exponential(5.0)), len(bank) - 1)
     _, P, r = bank[idx]
     P = P.copy()
     cnt = len(P)
@@ -806,14 +894,16 @@ def affine_init(n, rng, bank):
 
 def init(n, rng, ictx=None):
     u = rng.random()
-    if n >= 6 and u < 0.7:
+    if n >= 6 and u < 0.75:
         h = None
         try:
-            if u < 0.3 or ictx is None:
+            if u < 0.12 and n >= 8:
+                h = corner_lattice(n, rng)
+            elif u < 0.30 or ictx is None:
                 h = hex_lattice(n, rng)
             else:
                 if ictx.get("bank") is None:
-                    ictx["bank"] = build_lattice_bank(n, rng, ictx.get("samples", 120), ictx.get("bank_deadline", time.time() + 2.0))
+                    ictx["bank"] = build_lattice_bank(n, rng, ictx.get("samples", 140), ictx.get("bank_deadline", time.time() + 2.0))
                 h = affine_init(n, rng, ictx["bank"])
                 if h is None:
                     h = hex_lattice(n, rng)
@@ -1142,6 +1232,55 @@ def op_migrate(mode):
     return f
 
 
+def op_rescale(c, r, rng, n, ctx):
+    """Anneal radii: stretch large circles slightly and shrink small ones (or vice versa) then re-relax.
+    Explores the variable-radii dimension which L-BFGS-B on positions alone cannot."""
+    rbar = max(float(r.mean()), 1e-6)
+    order = np.argsort(r)
+    fac = rng.uniform(0.92, 1.08, n)
+    # bias: largest +3%, smallest -3%
+    q = max(1, n // 4)
+    fac[order[-q:]] *= rng.uniform(1.02, 1.06)
+    fac[order[:q]] *= rng.uniform(0.94, 0.98)
+    r2 = np.clip(r * fac, 1e-4, 0.5)
+    # clip to wall distance
+    wall = np.minimum(np.minimum(c[:, 0], 1 - c[:, 0]), np.minimum(c[:, 1], 1 - c[:, 1]))
+    r2 = np.minimum(r2, wall - 1e-4)
+    r2 = np.maximum(r2, 1e-4)
+    c2 = c + rng.normal(0, 0.06 * rbar, c.shape)
+    return _clip(c2), r2, (1e2, 1e3, 1e4, 1e5)
+
+
+def op_boundary(c, r, rng, n, ctx):
+    """Push boundary circles inward/outward: perturb wall-touching circles along the wall normal."""
+    rbar = max(float(r.mean()), 1e-6)
+    wall_gap = np.minimum(np.minimum(c[:, 0] - r, 1 - c[:, 0] - r), np.minimum(c[:, 1] - r, 1 - c[:, 1] - r))
+    bidx = np.where(wall_gap < 0.10 * rbar)[0]
+    if len(bidx) == 0:
+        return op_jitter(0.08)(c, r, rng, n, ctx)
+    k = min(len(bidx), max(1, int(rng.integers(1, 4))))
+    sel = rng.choice(bidx, k, replace=False)
+    c2 = c.copy()
+    for i in sel:
+        # push slightly away from nearest wall
+        dx = 0.0
+        dy = 0.0
+        if c[i, 0] - r[i] < 0.08 * rbar:
+            dx = rng.uniform(0.2, 0.8) * rbar
+        elif 1 - c[i, 0] - r[i] < 0.08 * rbar:
+            dx = -rng.uniform(0.2, 0.8) * rbar
+        if c[i, 1] - r[i] < 0.08 * rbar:
+            dy = rng.uniform(0.2, 0.8) * rbar
+        elif 1 - c[i, 1] - r[i] < 0.08 * rbar:
+            dy = -rng.uniform(0.2, 0.8) * rbar
+        if dx == 0 and dy == 0:
+            dx = rng.normal(0, 0.3 * rbar)
+            dy = rng.normal(0, 0.3 * rbar)
+        c2[i, 0] += dx
+        c2[i, 1] += dy
+    return _clip(c2), r.copy(), (1e2, 1e3, 1e4, 1e5)
+
+
 OPS = [
     op_jitter(0.05),
     op_jitter(0.15),
@@ -1159,6 +1298,8 @@ OPS = [
     op_migrate(0),
     op_migrate(1),
     op_grain,
+    op_rescale,
+    op_boundary,
 ]
 
 
@@ -1182,7 +1323,7 @@ def solve(n, budget, seed, out, t0=None, peers=()):
     reserve = min(5.0, max(0.5, 0.05 * budget))
     end = t0 + budget - reserve
     p1_end = t0 + 0.25 * budget
-    p2_end = t0 + 0.80 * budget - reserve
+    p2_end = t0 + 0.82 * budget - reserve
     p4_end = end - max(0.3, 0.02 * budget)
     best = trivial(n)
     save(out, n, best)
@@ -1219,8 +1360,8 @@ def solve(n, budget, seed, out, t0=None, peers=()):
 
     ictx = {
         "bank": None,
-        "samples": int(min(300, max(60, 4 * budget))),
-        "bank_deadline": min(t0 + max(0.5, 0.03 * budget), end),
+        "samples": int(min(400, max(80, 5 * budget))),
+        "bank_deadline": min(t0 + max(0.6, 0.035 * budget), end),
     }
 
     # Phase 1: cold multi-start, each finished by the exact Newton polish
@@ -1232,11 +1373,11 @@ def solve(n, budget, seed, out, t0=None, peers=()):
             c, r = init(n, rng, ictx)
         except Exception:
             c, r = rng.random((n, 2)), np.full(n, 0.4 / math.sqrt(n))
-        c, r = run_penalty(c, r, n, (10, 100, 1e3, 1e4, 1e5), 300, end)
+        c, r = run_penalty(c, r, n, (10, 100, 1e3, 1e4, 1e5), 320, end)
         cand = evaluate(c, lp_radii(c, r))
         starts += 1
         if cand["s"] > 0 and time.time() < end:
-            q = newton_polish(cand["c"], cand["r"], n, min(end, time.time() + 0.02 * budget))
+            q = newton_polish(cand["c"], cand["r"], n, min(end, time.time() + 0.025 * budget))
             if q["s"] > cand["s"]:
                 cand = q
         add_pool(cand)
@@ -1245,7 +1386,7 @@ def solve(n, budget, seed, out, t0=None, peers=()):
             save(out, n, best)
 
     if time.time() < end and best["s"] > 0:
-        cand = full_polish(best, n, min(end, time.time() + 0.12 * budget), budget)
+        cand = full_polish(best, n, min(end, time.time() + 0.14 * budget), budget)
         if cand["s"] > best["s"]:
             best = cand
             save(out, n, best)
@@ -1283,7 +1424,7 @@ def solve(n, budget, seed, out, t0=None, peers=()):
                 budget_ok = nt_time < 0.5 * (now - hop_t0) + 1.0
                 if not same and (cand["s"] > cur["s"] - 5e-4 or (near and budget_ok)):
                     tq = time.time()
-                    q = newton_polish(cand["c"], cand["r"], n, min(until, tq + 0.02 * budget))
+                    q = newton_polish(cand["c"], cand["r"], n, min(until, tq + 0.022 * budget))
                     nt_time += time.time() - tq
                     if q["s"] > cand["s"]:
                         cand = q
@@ -1302,7 +1443,7 @@ def solve(n, budget, seed, out, t0=None, peers=()):
                 stall = 0
                 save(out, n, best)
                 if time.time() < until:
-                    use_slsqp = slsqp_ok and (n <= 60 or time.time() - last_polish > 0.15 * budget)
+                    use_slsqp = slsqp_ok and (n <= 60 or time.time() - last_polish > 0.13 * budget)
                     if use_slsqp:
                         last_polish = time.time()
                     pol = full_polish(best, n, min(until, time.time() + 0.1 * budget), budget, slsqp=use_slsqp)
@@ -1327,7 +1468,7 @@ def solve(n, budget, seed, out, t0=None, peers=()):
 
     # Phase 3: full polish of the best basin
     if time.time() < end and best["s"] > 0:
-        pol = full_polish(best, n, min(end, time.time() + 0.1 * budget), budget)
+        pol = full_polish(best, n, min(end, time.time() + 0.12 * budget), budget)
         if pol["s"] > best["s"]:
             best = pol
             save(out, n, best)
@@ -1470,3 +1611,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+```
