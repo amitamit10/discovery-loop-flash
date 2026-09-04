@@ -161,6 +161,83 @@ OUTPUT FORMAT: first line "IDEA: <one sentence>", then exactly one ```python blo
 
     @staticmethod
     def call_model(prompt, model):
+        # Direct HTTP (no `opencode run` agent): opencode run spawns tools (read/ls)
+        # and hangs / returns no-code on 60k-char prompts. Call zen endpoints directly.
+        # - opencode-go/* -> POST /responses (muse-spark needs responses API; chat/completions 500s)
+        # - opencode/* (free) -> POST /chat/completions (responses API 500s for free tier)
+        # otherwise fall back to `claude -p` CLI (original behaviour)
+        if "/" in model:
+            prov, mid = model.split("/", 1)
+            if prov.startswith("opencode"):
+                import urllib.request
+                key = os.environ.get("OPENCODE_GO_API_KEY", "")
+                if not key:
+                    for p in [os.path.expanduser("~/.openclaw/programmer-key"), "/tmp/go-key.txt"]:
+                        try:
+                            k = open(p).read().strip()
+                            if k:
+                                key = k
+                                break
+                        except Exception:
+                            pass
+                key = key.strip()
+                if not key:
+                    return None, 0.0, "missing OPENCODE_GO_API_KEY"
+                UA = {"Authorization": "Bearer " + key, "Content-Type": "application/json",
+                      "User-Agent": "opencode/1.18.16"}
+                def _cost_from_usage(usage, default=0.0):
+                    try:
+                        it = int(usage.get("input_tokens", 0)); ot = int(usage.get("output_tokens", 0))
+                        return it * 0.5/1e6 + ot * 2.0/1e6
+                    except Exception:
+                        return default
+                text, cost = "", 0.0
+                try:
+                    if prov == "opencode-go":
+                        url = "https://opencode.ai/zen/go/v1/responses"
+                        body = json.dumps({"model": mid, "input": prompt,
+                                           "max_output_tokens": 8000}).encode()
+                        req = urllib.request.Request(url, data=body, headers=UA)
+                        with urllib.request.urlopen(req, timeout=600) as r:
+                            d = json.load(r)
+                        for o in (d.get("output") or []):
+                            if o.get("type") == "message":
+                                for c in (o.get("content") or []):
+                                    if isinstance(c, dict) and "text" in c:
+                                        text += c["text"] + "\n"
+                        try:
+                            cost = float(d.get("cost")) if d.get("cost") is not None else _cost_from_usage(d.get("usage") or {}, 0.05)
+                        except Exception:
+                            cost = _cost_from_usage(d.get("usage") or {}, 0.05)
+                        if (d.get("status") not in ("completed", None) and not text):
+                            return None, cost, f"responses status={d.get('status')} err={str(d.get('error'))[:300]}"
+                    else:
+                        url = "https://opencode.ai/zen/v1/chat/completions"
+                        body = json.dumps({"model": mid,
+                                           "messages": [{"role": "user", "content": prompt}],
+                                           "max_tokens": 8000}).encode()
+                        req = urllib.request.Request(url, data=body, headers=UA)
+                        with urllib.request.urlopen(req, timeout=600) as r:
+                            d = json.load(r)
+                    # free-tier chat/completions shape
+                        ch = (d.get("choices") or [{}])[0]
+                        msg = ch.get("message") or {}
+                        text = msg.get("content") or ""
+                        try:
+                            cost = float(d.get("cost")) if d.get("cost") is not None else _cost_from_usage(d.get("usage") or {}, 0.0)
+                        except Exception:
+                            cost = 0.0
+                except Exception as e:
+                    em = ""
+                    try:
+                        em = e.read().decode()[:400]
+                    except Exception:
+                        em = str(e)[:400]
+                    return None, 0.0, f"http {model} failed: {type(e).__name__} {em}"
+                m = re.search(r"```python\s*\n(.*?)```", text, re.S)
+                idea = re.search(r"IDEA:\s*(.+)", text)
+                return (m.group(1) if m else None), float(cost), (idea.group(1).strip() if idea else "(no idea line)")
+        # fallback: claude CLI
         env = {k: v for k, v in os.environ.items() if not (k.startswith("CLAUDE") or k.startswith("ANTHROPIC_"))}
         cmd = [
             "claude",
@@ -242,7 +319,14 @@ def main():
     ap.add_argument("--workers", type=int)
     ap.add_argument("--iters", type=int, default=40)
     ap.add_argument("--budget", type=float, default=30.0, help="max model spend in USD")
-    ap.add_argument("--model", default="claude-fable-5-1")
+    ap.add_argument("--model", default="opencode-go/muse-spark-1.2-contributor",
+                        help="primary model (cheap/smart). Owner policy: muse-spark-1.2-contributor primary")
+    ap.add_argument("--fallback-model", default="opencode-go/muse-spark-1.3-contributor",
+                        help="fallback if primary returns no code (never deepseek unless no choice)")
+    ap.add_argument("--beam", type=int, default=1,
+                        help="beam width: 1=single primary, 3=primary + 2 free secondaries in parallel")
+    ap.add_argument("--secondary-models", default="opencode/mimo-v2.5-free,opencode/laguna-s-2.1-free",
+                        help="comma-separated free models for beam slots 1.. (cost $0, max attempts no budget)")
     ap.add_argument("--plateau-window", type=int, default=4, help="consecutive non-improving iters before plateau stop")
     ap.add_argument(
         "--plateau-threshold", type=float, default=0.01, help="min total improvement across window to count as progress"
@@ -341,52 +425,87 @@ def main():
             )
             break
         prompt = L.build_prompt(targets, rec, last_results, history)
-        code, cost, idea = L.call_model(prompt, a.model)
-        cost_total += cost
-        if not code:
-            log(
-                {
-                    "iter": it,
-                    "total": P.FAIL_SCORE * len(targets),
-                    "status": "no-code",
-                    "cost": cost,
-                    "idea": idea,
-                    "errors": "",
-                }
-            )
-            print(f"[iter {it}] model returned no code ({idea})")
-            it += 1
-            continue
+        # ── beam search: primary (muse-spark-1.2, fallback 1.3) + free secondaries in parallel ──
+        beam = max(1, a.beam or 1)
+        secondaries = [m.strip() for m in (a.secondary_models or "").split(",") if m.strip()] if beam > 1 else []
+        beam_models = [a.model]
+        for b in range(1, beam):
+            if secondaries:
+                # rotate through free list so each iter tries different free models
+                beam_models.append(secondaries[(it + b - 1) % len(secondaries)])
+            else:
+                beam_models.append(a.model)
+        def _call(m):
+            c, co, i = L.call_model(prompt, m)
+            # primary fallback: 1.2 -> 1.3 (never deepseek unless explicitly asked)
+            if not c and m == a.model and a.fallback_model and a.fallback_model != m:
+                c2, co2, i2 = L.call_model(prompt, a.fallback_model)
+                return (m + "->" + a.fallback_model, c2, co + co2, i2 + f" [fallback from {m}]")
+            return (m, c, co, i)
+        with ThreadPoolExecutor(max_workers=beam) as mex:
+            beam_out = list(mex.map(_call, beam_models))
+        # evaluate each beam candidate; keep per-target bests from ALL beams, champion = best total
         wd = os.path.join(L.runs, f"iter{it:03d}")
         os.makedirs(wd, exist_ok=True)
-        cand = os.path.join(wd, "solver.py")
-        open(cand, "w", encoding="utf-8").write(code)
-        res = L.evaluate(cand, targets, budget, 1000 * it, wd, workers)
-        total = L.total(res, rec)
-        improved, wins = L.update_bests(res, it, rec)
-        errors = "; ".join(f"{r['target']}: {r['error']}" for r in res if "error" in r)
+        beam_results = []
+        iter_cost = 0.0
+        for bi, (used_model, code, cost, idea) in enumerate(beam_out):
+            iter_cost += cost
+            if not code:
+                beam_results.append({"model": used_model, "total": P.FAIL_SCORE * len(targets),
+                                     "status": "no-code", "cost": cost, "idea": idea})
+                continue
+            sub_wd = wd if bi == 0 else os.path.join(wd, f"beam{bi}")
+            os.makedirs(sub_wd, exist_ok=True)
+            cand = os.path.join(sub_wd, "solver.py")
+            open(cand, "w", encoding="utf-8").write(code)
+            res = L.evaluate(cand, targets, budget, 1000 * it + bi, sub_wd, workers)
+            total = L.total(res, rec)
+            improved, wins = L.update_bests(res, it, rec)
+            errors = "; ".join(f"{r['target']}: {r['error']}" for r in res if "error" in r)
+            beam_results.append({"model": used_model, "total": total, "status": "pending",
+                                 "cost": cost, "idea": idea, "errors": errors[:800],
+                                 "wins": wins, "improved": improved, "res": res, "file": cand})
+        cost_total += iter_cost
+        # pick best beam by total
+        scored = [b for b in beam_results if b["status"] != "no-code"]
+        if not scored:
+            log({"iter": it, "total": P.FAIL_SCORE * len(targets), "status": "no-code",
+                 "cost": iter_cost, "idea": "; ".join(f"{b['model']}: {b['idea']}" for b in beam_results),
+                 "errors": "", "beam": beam_models})
+            print(f"[iter {it}] beam all no-code cost=${cost_total:.2f}")
+            it += 1
+            continue
+        best_beam = max(scored, key=lambda b: b["total"])
+        total = best_beam["total"]
         if total > champ_total:
             champ_total = total
             status = "champion"
-            open(L.champ, "w", encoding="utf-8").write(code)
+            open(L.champ, "w", encoding="utf-8").write(open(best_beam["file"], encoding="utf-8").read())
         else:
             status = "rejected"
-        last_results = res
+        for b in beam_results:
+            if b["status"] != "no-code":
+                b["status"] = "champion" if b is best_beam and status == "champion" else "rejected"
+        last_results = best_beam["res"]
         log(
             {
                 "iter": it,
                 "total": total,
                 "status": status,
-                "cost": cost,
-                "idea": idea,
-                "errors": errors[:800],
-                "wins": wins,
-                "improved": improved,
+                "cost": iter_cost,
+                "idea": f"[{best_beam['model']}] {best_beam['idea']}",
+                "errors": best_beam.get("errors", "")[:800],
+                "wins": best_beam.get("wins", []),
+                "improved": best_beam.get("improved", []),
+                "beam": [{"model": b["model"], "total": b.get("total"), "status": b["status"],
+                           "idea": b.get("idea", "")[:200]} for b in beam_results],
             }
         )
         print(
-            f"[iter {it}] {status} total={total:.4f} champ={champ_total:.4f} cost=${cost_total:.2f} wins={wins} improved={improved} | {idea}"
+            f"[iter {it}] {status} total={total:.4f} champ={champ_total:.4f} cost=${cost_total:.2f} wins={best_beam.get('wins', [])} improved={best_beam.get('improved', [])} | [{best_beam['model']}] {best_beam['idea']}"
         )
+        wins = best_beam.get("wins", []); improved = best_beam.get("improved", [])
         if not a.no_publish and set(wins) & set(improved):
             L.publish()
         it += 1
