@@ -354,6 +354,10 @@ def main():
         action="store_true",
         help="never fire publish.py (no git commit/push, no maintainer email); for isolated experiments",
     )
+    ap.add_argument("--curriculum", choices=["none", "easy-first"], default="none",
+                    help="curriculum mode: none (default) or easy-first (start with easy targets, then hard; auto-fallback if hard stalls)")
+    ap.add_argument("--curriculum-patience", type=int, default=10,
+                    help="iters without champion on hard phase before auto-fallback to easy targets")
     a = ap.parse_args()
     deadline = time.time() + 60 * a.wall_minutes if a.wall_minutes else None
     L = Loop(a.problem)
@@ -366,6 +370,29 @@ def main():
     cost_total = sum(h["cost"] for h in history)
     champ_total = max([h["total"] for h in history if h["status"] in ("champion", "seed")], default=None)
     it = (history[-1]["iter"] + 1) if history else 0
+    # --- curriculum easy-first (after it is known) ---
+    curriculum = getattr(a, "curriculum", "none")
+    curr_patience = getattr(a, "curriculum_patience", 10)
+    curr_phase = "hard"
+    curr_phase_start = it
+    easy_targets = []
+    hard_targets = list(P.TARGETS)
+    if curriculum == "easy-first" and not a.targets:
+        easy_targets = [x for x in P.TARGETS if x.isdigit() and int(x) < 50]
+        if not easy_targets:
+            easy_targets = P.TARGETS[:2]
+        # fresh curriculum run: always start easy (spec: קל -> קשה)
+        # if resuming mid-run with history already in hard, keep hard unless explicitly restarting
+        # detect restart: if history length < 8 and no champion yet beyond seed, force easy
+        is_fresh = len(history) <= 7 and not any(h.get("status") == "champion" for h in history)
+        if is_fresh or it < 8:
+            targets = easy_targets
+            curr_phase = "easy"
+            curr_phase_start = it
+            print(f"[curriculum] easy-first: phase=easy targets={targets} (hard={hard_targets}) patience={curr_patience}")
+        else:
+            curr_phase = "hard"
+            targets = hard_targets
 
     def log(entry):
         history.append(entry)
@@ -524,6 +551,40 @@ def main():
         if not a.no_publish and set(wins) & set(improved):
             L.publish()
         it += 1
+        # --- curriculum phase transitions ---
+        if curriculum == "easy-first":
+            if curr_phase == "easy":
+                # advance to hard after plateau on easy or after 10 iters or after at least one champion
+                recent = [h for h in history if h["status"] not in ("seed",)]
+                tail = recent[-4:] if len(recent) >= 4 else []
+                easy_done = False
+                if tail and all(h["status"] in ("rejected","no-code") for h in tail):
+                    easy_done = True
+                if any(h["status"] == "champion" for h in history[max(0,len(history)-6):]):
+                    # give a bit more room after first champion, but advance after 8 iters anyway
+                    pass
+                if it - curr_phase_start >= 10:
+                    easy_done = True
+                if easy_done or check_plateau(4, a.plateau_threshold):
+                    print(f"[curriculum] easy phase done at iter {it} (champ_total={champ_total:.4f}); switching to hard targets={hard_targets}")
+                    targets = hard_targets
+                    rec = P.records_fetch() if a.refresh_records else P.records_load()
+                    curr_phase = "hard"
+                    curr_phase_start = it
+                    last_results = None
+            elif curr_phase == "hard":
+                # if hard stalls for curr_patience iters with no champion, fallback to easy
+                recent_hard = [h for h in history if h["iter"] >= curr_phase_start and h["status"] not in ("seed",)]
+                if len(recent_hard) >= curr_patience:
+                    tail = recent_hard[-curr_patience:]
+                    if not any(h["status"] == "champion" for h in tail):
+                        print(f"[curriculum] hard stalled {curr_patience} iters without champion (phase start {curr_phase_start}); auto-fallback to easy targets={easy_targets}")
+                        # optionally also switch problem if available; for now fallback to easy N within same problem
+                        targets = easy_targets
+                        curr_phase = "fallback-easy"
+                        curr_phase_start = it
+                        last_results = None
+                        # extend budget: don't plateau-stop, continue on easy
         if check_plateau(a.plateau_window, a.plateau_threshold):
             print(
                 f"[plateau] no meaningful improvement in last {a.plateau_window} iterations "
